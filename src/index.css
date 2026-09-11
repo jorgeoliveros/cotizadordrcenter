@@ -6,35 +6,99 @@
 }
 
 @media print {
-  html, body {
-    width: 210mm !important;
-    height: 297mm !important;
+  /* 1. Ocultar completamente toda la interfaz de usuario que no sea la cotización */
+  header,
+  nav,
+  aside,
+  footer,
+  button,
+  .no-print,
+  .print-hidden,
+  #modal-root,
+  [role="dialog"],
+  .fixed,
+  .toast-notification {
+    display: none !important;
+  }
+
+  /* 2. Configurar la página base para ancho completo y sin márgenes extra */
+  html,
+  body {
+    width: 100% !important;
+    height: 100% !important;
+    max-height: 100vh !important;
     margin: 0 !important;
     padding: 0 !important;
+    background: #ffffff !important;
     background-color: #ffffff !important;
+    overflow: hidden !important;
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
   }
 
-  header,
-  nav,
-  aside,
-  .no-print {
-    display: none !important;
+  /* 3. Desactivar layouts de grid/flex y paddings en los contenedores superiores */
+  main,
+  section,
+  div {
+    box-sizing: border-box !important;
   }
 
+  main {
+    display: block !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  section {
+    display: block !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  /* 4. Ajustar el contenedor de la cotización para que ocupe el 100% del ancho del papel a 1 sola página */
   #quotation-document-sheet {
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: space-between !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 100% !important;
+    height: 100vh !important;
+    max-height: 100vh !important;
+    min-height: 0 !important;
+    margin: 0 !important;
+    padding: 8mm 10mm !important;
+    box-sizing: border-box !important;
     box-shadow: none !important;
     border: none !important;
     border-radius: 0 !important;
-    width: 210mm !important;
-    min-height: 297mm !important;
-    max-width: 210mm !important;
-    margin: 0 auto !important;
-    padding: 16mm 18mm !important;
-    box-sizing: border-box !important;
-    page-break-after: avoid !important;
     page-break-inside: avoid !important;
+    page-break-before: avoid !important;
+    page-break-after: avoid !important;
+    break-inside: avoid !important;
+    break-after: avoid !important;
+    overflow: hidden !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* 5. Asegurar fidelidad exacta de colores, fondos y bordes en todos los elementos hijos */
+  #quotation-document-sheet * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  .print-avoid-break,
+  tr,
+  table,
+  tbody {
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
   }
 }
+
 

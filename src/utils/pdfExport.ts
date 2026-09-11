@@ -39,27 +39,21 @@ export async function exportQuoteToPdf(elementId: string, fileName: string = 'Co
     const pdfWidth = pdf.internal.pageSize.getWidth();
     const pdfHeight = pdf.internal.pageSize.getHeight();
 
-    const imgWidth = pdfWidth;
-    const imgHeight = (canvas.height * pdfWidth) / canvas.width;
+    let renderWidth = pdfWidth;
+    let renderHeight = (canvas.height * pdfWidth) / canvas.width;
+    let xOffset = 0;
+    let yOffset = 0;
 
-    // Tolerance of 4mm for slight rounding differences to ensure it fits perfectly on a single A4 page
-    if (imgHeight <= pdfHeight + 4) {
-      pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, Math.min(imgHeight, pdfHeight), undefined, 'FAST');
-    } else {
-      // Multiple pages support if content exceeds single page
-      let heightLeft = imgHeight;
-      let position = 0;
-
-      pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight, undefined, 'FAST');
-      heightLeft -= pdfHeight;
-
-      while (heightLeft > 0) {
-        position = position - pdfHeight;
-        pdf.addPage();
-        pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight, undefined, 'FAST');
-        heightLeft -= pdfHeight;
-      }
+    // Enforce strict 1-page A4 fit: if the rendered height exceeds the A4 page height,
+    // proportionally scale down to fit comfortably on one single page.
+    if (renderHeight > pdfHeight) {
+      const ratio = pdfHeight / renderHeight;
+      renderWidth = pdfWidth * ratio;
+      renderHeight = pdfHeight;
+      xOffset = (pdfWidth - renderWidth) / 2;
     }
+
+    pdf.addImage(imgData, 'PNG', xOffset, yOffset, renderWidth, renderHeight, undefined, 'FAST');
 
     pdf.save(fileName.endsWith('.pdf') ? fileName : `${fileName}.pdf`);
     return true;

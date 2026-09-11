@@ -68,7 +68,7 @@ export const QuoteDocument: React.FC<QuoteDocumentProps> = ({
   return (
     <div
       id="quotation-document-sheet"
-      className={`relative w-full max-w-[794px] min-h-[1123px] mx-auto p-8 sm:p-12 transition-all duration-200 ${bodyFontClass} text-stone-800 flex flex-col justify-between ${
+      className={`relative w-full max-w-[794px] min-h-[1123px] mx-auto p-8 sm:p-12 transition-all duration-200 ${bodyFontClass} text-stone-800 flex flex-col justify-between print:w-full print:max-w-none print:min-h-0 print:h-[100vh] print:max-h-[100vh] print:p-6 print:m-0 print:border-none print:shadow-none print:rounded-none ${
         isPrinting
           ? 'shadow-none border-none'
           : 'shadow-2xl rounded-sm border border-stone-200/90'
@@ -106,7 +106,7 @@ export const QuoteDocument: React.FC<QuoteDocumentProps> = ({
       {/* Content Wrapper */}
       <div className="flex-1 flex flex-col">
         {/* Top Header: Company info on Left, Crisp Logo on Right */}
-        <div className="flex flex-col sm:flex-row justify-between items-start gap-6 mb-8 sm:mb-10">
+        <div className="flex flex-col sm:flex-row justify-between items-start gap-6 mb-8 sm:mb-10 print:mb-3 print:gap-4 print-avoid-break">
           {/* Company & Professional details */}
           <div className="space-y-1 text-left max-w-sm">
             {quote.company.name && (
@@ -166,7 +166,7 @@ export const QuoteDocument: React.FC<QuoteDocumentProps> = ({
                 <img
                   src={brand.logoUrl}
                   alt="Logo Empresa"
-                  className="object-contain transition-transform"
+                  className="object-contain transition-transform print:max-h-20"
                   style={{
                     width: `${brand.logoWidth}px`,
                     maxHeight: '120px',
@@ -176,7 +176,7 @@ export const QuoteDocument: React.FC<QuoteDocumentProps> = ({
               </div>
             ) : (
               <div
-                className="border-2 border-dashed border-stone-300 rounded p-4 text-center text-xs text-stone-400"
+                className="border-2 border-dashed border-stone-300 rounded p-4 text-center text-xs text-stone-400 print:p-2"
                 style={{ width: `${brand.logoWidth}px` }}
               >
                 Logo de la empresa
@@ -187,7 +187,7 @@ export const QuoteDocument: React.FC<QuoteDocumentProps> = ({
 
         {/* Recipient & Quotation Title Row */}
         <div
-          className={`flex flex-col sm:flex-row justify-between items-start sm:items-end gap-6 pb-5 mb-6 ${
+          className={`flex flex-col sm:flex-row justify-between items-start sm:items-end gap-6 pb-5 mb-6 print:pb-2.5 print:mb-2.5 print:gap-3 print-avoid-break ${
             theme === 'professional'
               ? 'border-b-2 border-stone-300/90'
               : theme === 'modern'
@@ -229,7 +229,7 @@ export const QuoteDocument: React.FC<QuoteDocumentProps> = ({
           <div className="text-left sm:text-right space-y-1 sm:min-w-[200px]">
             {theme === 'modern' ? (
               <div
-                className="inline-block px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wider mb-1"
+                className="inline-block px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wider mb-1 print:mb-0.5 print:py-0.5 print:px-2"
                 style={{
                   backgroundColor: `${brand.primaryColor}10`,
                   color: brand.primaryColor,
@@ -240,7 +240,7 @@ export const QuoteDocument: React.FC<QuoteDocumentProps> = ({
               </div>
             ) : (
               <h1
-                className={`text-2xl sm:text-3xl font-light tracking-wider text-stone-900 ${headingFontClass}`}
+                className={`text-2xl sm:text-3xl font-light tracking-wider text-stone-900 print:text-2xl ${headingFontClass}`}
                 style={{ color: brand.primaryColor }}
               >
                 {quote.title || 'COTIZACIÓN'}
@@ -265,7 +265,7 @@ export const QuoteDocument: React.FC<QuoteDocumentProps> = ({
         </div>
 
         {/* Items Table */}
-        <div className="mb-6">
+        <div className="mb-6 print:mb-2.5 print-avoid-break">
           <table className="w-full text-left border-collapse">
             <thead>
               {theme === 'professional' ? (
@@ -276,16 +276,16 @@ export const QuoteDocument: React.FC<QuoteDocumentProps> = ({
                   }}
                   className="text-xs font-bold uppercase tracking-wider"
                 >
-                  <th className="py-2.5 px-2 text-center w-20 rounded-l-xs">
+                  <th className="py-2.5 px-2 text-center w-20 rounded-l-xs print:py-1.5">
                     CANTIDAD
                   </th>
-                  <th className="py-2.5 px-4">
+                  <th className="py-2.5 px-4 print:py-1.5">
                     DESCRIPCIÓN
                   </th>
-                  <th className="py-2.5 px-3 text-right w-36">
+                  <th className="py-2.5 px-3 text-right w-36 print:py-1.5">
                     PRECIO UNITARIO
                   </th>
-                  <th className="py-2.5 px-3 text-right w-36 rounded-r-xs">
+                  <th className="py-2.5 px-3 text-right w-36 rounded-r-xs print:py-1.5">
                     TOTAL
                   </th>
                 </tr>
@@ -298,32 +298,32 @@ export const QuoteDocument: React.FC<QuoteDocumentProps> = ({
                   }}
                   className="text-xs font-bold uppercase tracking-wider"
                 >
-                  <th className="py-2.5 px-2 text-center w-20">
+                  <th className="py-2.5 px-2 text-center w-20 print:py-1.5">
                     CANTIDAD
                   </th>
-                  <th className="py-2.5 px-4">
+                  <th className="py-2.5 px-4 print:py-1.5">
                     DESCRIPCIÓN
                   </th>
-                  <th className="py-2.5 px-3 text-right w-36">
+                  <th className="py-2.5 px-3 text-right w-36 print:py-1.5">
                     PRECIO UNITARIO
                   </th>
-                  <th className="py-2.5 px-3 text-right w-36">
+                  <th className="py-2.5 px-3 text-right w-36 print:py-1.5">
                     TOTAL
                   </th>
                 </tr>
               ) : (
                 /* Minimalist Header */
                 <tr className="border-b-2 border-stone-800 text-stone-900">
-                  <th className="py-2.5 px-2 text-xs font-bold uppercase tracking-wider text-center w-20">
+                  <th className="py-2.5 px-2 text-xs font-bold uppercase tracking-wider text-center w-20 print:py-1.5">
                     CANTIDAD
                   </th>
-                  <th className="py-2.5 px-4 text-xs font-bold uppercase tracking-wider">
+                  <th className="py-2.5 px-4 text-xs font-bold uppercase tracking-wider print:py-1.5">
                     DESCRIPCIÓN
                   </th>
-                  <th className="py-2.5 px-3 text-xs font-bold uppercase tracking-wider text-right w-36">
+                  <th className="py-2.5 px-3 text-xs font-bold uppercase tracking-wider text-right w-36 print:py-1.5">
                     PRECIO UNITARIO
                   </th>
-                  <th className="py-2.5 px-3 text-xs font-bold uppercase tracking-wider text-right w-36">
+                  <th className="py-2.5 px-3 text-xs font-bold uppercase tracking-wider text-right w-36 print:py-1.5">
                     TOTAL
                   </th>
                 </tr>
@@ -337,12 +337,12 @@ export const QuoteDocument: React.FC<QuoteDocumentProps> = ({
                 return (
                   <tr
                     key={item.id}
-                    className="hover:bg-stone-50/50 transition-colors"
+                    className="hover:bg-stone-50/50 transition-colors print-avoid-break"
                   >
-                    <td className="py-3.5 px-2 text-center text-sm font-medium align-top">
+                    <td className="py-3.5 px-2 text-center text-sm font-medium align-top print:py-1.5">
                       {item.quantity}
                     </td>
-                    <td className="py-3.5 px-4 align-top">
+                    <td className="py-3.5 px-4 align-top print:py-1.5">
                       <div className="font-medium text-stone-900 text-sm">
                         {item.title}
                       </div>
@@ -352,10 +352,10 @@ export const QuoteDocument: React.FC<QuoteDocumentProps> = ({
                         </div>
                       )}
                     </td>
-                    <td className="py-3.5 px-3 text-right text-sm font-medium align-top whitespace-nowrap text-stone-700">
+                    <td className="py-3.5 px-3 text-right text-sm font-medium align-top whitespace-nowrap text-stone-700 print:py-1.5">
                       {formatCurrency(item.unitPrice, quote.currency)}
                     </td>
-                    <td className="py-3.5 px-3 text-right text-sm font-semibold align-top whitespace-nowrap text-stone-900">
+                    <td className="py-3.5 px-3 text-right text-sm font-semibold align-top whitespace-nowrap text-stone-900 print:py-1.5">
                       {formatCurrency(rowTotal, quote.currency)}
                       {item.isPriceManual && (
                         <span className="block text-[9px] text-amber-700 font-normal">
@@ -371,9 +371,9 @@ export const QuoteDocument: React.FC<QuoteDocumentProps> = ({
         </div>
 
         {/* Totals & Calculations Block (Right-aligned, matching PDF style) */}
-        <div className="flex justify-end mb-8">
+        <div className="flex justify-end mb-8 print:mb-2.5 print-avoid-break">
           <div
-            className={`w-full sm:w-80 space-y-2 text-sm ${
+            className={`w-full sm:w-80 space-y-2 text-sm print:space-y-1 print:p-2.5 ${
               theme === 'modern'
                 ? 'p-4 rounded-xl border'
                 : theme === 'professional'
@@ -413,7 +413,7 @@ export const QuoteDocument: React.FC<QuoteDocumentProps> = ({
 
             {/* Total con descuento */}
             {quote.applyDiscount && (
-              <div className="flex justify-between items-center py-0.5 text-stone-900 font-semibold border-t border-stone-200 pt-1.5">
+              <div className="flex justify-between items-center py-0.5 text-stone-900 font-semibold border-t border-stone-200 pt-1.5 print:pt-1">
                 <span className="text-xs">(*) Total con descuento :</span>
                 <span className="text-sm font-bold">
                   {formatCurrency(totals.totalWithDiscount, quote.currency)}
@@ -433,7 +433,7 @@ export const QuoteDocument: React.FC<QuoteDocumentProps> = ({
 
             {/* Grand Total Final */}
             <div
-              className="flex justify-between items-center pt-2 mt-1.5 border-t-2 border-stone-800 font-bold"
+              className="flex justify-between items-center pt-2 mt-1.5 border-t-2 border-stone-800 font-bold print:pt-1.5 print:mt-1"
               style={{
                 borderColor: theme === 'professional' ? brand.primaryColor : '#1c1917',
                 color: brand.primaryColor,
@@ -455,11 +455,11 @@ export const QuoteDocument: React.FC<QuoteDocumentProps> = ({
 
         {/* Notas aclaratorias */}
         {quote.notes && quote.notes.length > 0 && (
-          <div className="mb-8 pt-2">
-            <h4 className="text-xs uppercase tracking-wider font-bold text-stone-800 mb-2">
+          <div className="mb-8 pt-2 print:mb-2 print:pt-0.5 print-avoid-break">
+            <h4 className="text-xs uppercase tracking-wider font-bold text-stone-800 mb-2 print:mb-1">
               Notas aclaratorias :
             </h4>
-            <ul className="space-y-1.5 text-xs text-stone-700 list-disc pl-5 leading-relaxed">
+            <ul className="space-y-1.5 text-xs text-stone-700 list-disc pl-5 leading-relaxed print:space-y-0.5">
               {quote.notes.map((note) => (
                 <li key={note.id} className="pl-1">
                   {note.text}
@@ -472,28 +472,28 @@ export const QuoteDocument: React.FC<QuoteDocumentProps> = ({
 
       {/* Signature and Digital Stamp Section - Sits cleanly at the base */}
       <div
-        className={`pt-5 mt-auto ${
+        className={`pt-5 mt-auto print:pt-2 print:mt-auto print-avoid-break ${
           theme === 'professional'
             ? 'border-t-2 border-stone-200'
             : 'border-t border-stone-200/80'
         }`}
       >
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-6 relative">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-6 relative print:gap-3">
           {/* Signee Details & Signature Stroke */}
           <div className="space-y-1 max-w-sm relative z-10">
             {/* Signature image / stroke */}
             {quote.signee.showSignature && quote.signee.signatureImage && (
-              <div className="h-14 w-48 mb-1 flex items-end">
+              <div className="h-14 w-48 mb-1 flex items-end print:h-10 print:mb-0.5">
                 <img
                   src={quote.signee.signatureImage}
                   alt="Firma Digital"
-                  className="max-h-14 max-w-full object-contain filter contrast-125"
+                  className="max-h-14 max-w-full object-contain filter contrast-125 print:max-h-10"
                 />
               </div>
             )}
 
             {/* Line for signature */}
-            <div className="w-52 h-[1px] bg-stone-400/80 mb-2"></div>
+            <div className="w-52 h-[1px] bg-stone-400/80 mb-2 print:mb-1"></div>
 
             <h5 className="text-sm font-bold text-stone-900">
               {quote.signee.name}
@@ -521,12 +521,12 @@ export const QuoteDocument: React.FC<QuoteDocumentProps> = ({
                   <img
                     src={quote.signee.stampImage}
                     alt="Sello Oficial"
-                    className="max-h-24 sm:max-h-28 object-contain opacity-90 drop-shadow-xs"
+                    className="max-h-24 sm:max-h-28 object-contain opacity-90 drop-shadow-xs print:max-h-16"
                   />
                 </div>
               ) : quote.signee.useGeneratedStamp ? (
                 <div
-                  className="border-2 border-dashed rounded-lg p-2.5 text-center min-w-[200px] max-w-[240px] opacity-85 select-none"
+                  className="border-2 border-dashed rounded-lg p-2.5 text-center min-w-[200px] max-w-[240px] opacity-85 select-none print:p-1.5 print:min-w-[180px]"
                   style={{
                     borderColor: quote.signee.stampDetails.color || '#475569',
                     color: quote.signee.stampDetails.color || '#334155',

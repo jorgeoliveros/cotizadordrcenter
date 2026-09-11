@@ -38,7 +38,7 @@ export const Header: React.FC<HeaderProps> = ({
   clientCount,
 }) => {
   return (
-    <header className="sticky top-0 z-30 bg-white/95 backdrop-blur-md border-b border-stone-200/80 px-4 sm:px-6 py-3 transition-all">
+    <header className="sticky top-0 z-30 bg-white/95 backdrop-blur-md border-b border-stone-200/80 px-4 sm:px-6 py-3 transition-all no-print print:hidden">
       <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-3">
         {/* Left: App title & Document tag */}
         <div className="flex items-center gap-3 w-full md:w-auto justify-between md:justify-start">

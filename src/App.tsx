@@ -162,7 +162,7 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-stone-100 flex flex-col font-sans">
+    <div className="min-h-screen bg-stone-100 flex flex-col font-sans print:min-h-0 print:h-auto print:bg-white print:p-0 print:m-0 print:block">
       {/* Top Navigation */}
       <Header
         quote={quote}
@@ -178,7 +178,7 @@ export default function App() {
       />
 
       {/* Mobile Tab Switcher (Editor vs Document) */}
-      <div className="lg:hidden sticky top-[57px] z-20 bg-stone-200/90 backdrop-blur-sm p-2 flex gap-2 border-b border-stone-300 no-print">
+      <div className="lg:hidden sticky top-[57px] z-20 bg-stone-200/90 backdrop-blur-sm p-2 flex gap-2 border-b border-stone-300 no-print print:hidden">
         <button
           type="button"
           onClick={() => setMobileTab('editor')}
@@ -206,10 +206,10 @@ export default function App() {
       </div>
 
       {/* Main Workspace: Split Screen Layout */}
-      <main className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+      <main className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 grid grid-cols-1 lg:grid-cols-12 gap-8 items-start print:block print:p-0 print:m-0 print:max-w-none print:w-full">
         {/* Left Column: Editor controls */}
         <section
-          className={`lg:col-span-5 space-y-6 no-print ${
+          className={`lg:col-span-5 space-y-6 no-print print:hidden ${
             mobileTab === 'preview' ? 'hidden lg:block' : 'block'
           }`}
         >
@@ -249,12 +249,12 @@ export default function App() {
 
         {/* Right Column: Live Document Sheet */}
         <section
-          className={`lg:col-span-7 flex flex-col items-center w-full ${
+          className={`lg:col-span-7 flex flex-col items-center w-full print:block print:w-full print:p-0 print:m-0 print:max-w-none ${
             mobileTab === 'editor' ? 'hidden lg:flex' : 'flex'
           }`}
         >
           {/* A4 Sheet Toolbar: Format & Quick Background Style Switcher */}
-          <div className="w-full max-w-[794px] mb-3 flex flex-wrap items-center justify-between gap-2 px-2 text-xs no-print">
+          <div className="w-full max-w-[794px] mb-3 flex flex-wrap items-center justify-between gap-2 px-2 text-xs no-print print:hidden">
             <div className="flex items-center gap-2">
               <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-white border border-stone-200 text-stone-700 font-semibold shadow-2xs text-[11px]">
                 <FileText className="w-3.5 h-3.5 text-stone-500" />
@@ -300,7 +300,7 @@ export default function App() {
           </div>
 
           {/* Document Sheet Container */}
-          <div className="w-full overflow-x-auto pb-8 flex justify-center">
+          <div className="w-full overflow-x-auto pb-8 flex justify-center print:block print:overflow-visible print:p-0 print:m-0 print:w-full">
             <QuoteDocument quote={quote} isPrinting={false} />
           </div>
         </section>
@@ -308,7 +308,7 @@ export default function App() {
 
       {/* Floating Toast Notification */}
       {toastMessage && (
-        <div className="fixed bottom-6 right-6 z-50 bg-stone-900 text-white px-4 py-3 rounded-xl shadow-xl border border-stone-700 flex items-center gap-2 text-xs font-medium animate-fade-in no-print">
+        <div className="fixed bottom-6 right-6 z-50 bg-stone-900 text-white px-4 py-3 rounded-xl shadow-xl border border-stone-700 flex items-center gap-2 text-xs font-medium animate-fade-in no-print print:hidden">
           <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
           <span>{toastMessage}</span>
         </div>
