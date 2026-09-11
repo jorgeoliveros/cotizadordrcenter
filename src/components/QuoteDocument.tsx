@@ -109,12 +109,14 @@ export const QuoteDocument: React.FC<QuoteDocumentProps> = ({
         <div className="flex flex-col sm:flex-row justify-between items-start gap-6 mb-8 sm:mb-10">
           {/* Company & Professional details */}
           <div className="space-y-1 text-left max-w-sm">
-            <h2
-              className={`text-lg sm:text-xl font-bold tracking-tight text-stone-900 ${headingFontClass}`}
-              style={{ color: brand.headerTextColor || brand.primaryColor }}
-            >
-              {quote.company.name}
-            </h2>
+            {quote.company.name && (
+              <h2
+                className={`text-lg sm:text-xl font-bold tracking-tight text-stone-900 ${headingFontClass}`}
+                style={{ color: brand.headerTextColor || brand.primaryColor }}
+              >
+                {quote.company.name}
+              </h2>
+            )}
             {quote.company.specialty && (
               <p className="text-xs sm:text-sm font-medium text-stone-700">
                 {quote.company.specialty}
@@ -135,9 +137,16 @@ export const QuoteDocument: React.FC<QuoteDocumentProps> = ({
                 {quote.company.addressLine2}
               </p>
             )}
-            {quote.company.phone && (
+            {quote.company.phone && quote.company.phone.trim() && (
               <p className="text-xs text-stone-600 pt-0.5">
-                Tel: {quote.company.phone}
+                {quote.company.phone.trim().toLowerCase().startsWith('tel')
+                  ? quote.company.phone
+                  : `Tel: ${quote.company.phone}`}
+              </p>
+            )}
+            {quote.company.email && (
+              <p className="text-xs text-stone-600">
+                {quote.company.email}
               </p>
             )}
           </div>
@@ -242,12 +251,12 @@ export const QuoteDocument: React.FC<QuoteDocumentProps> = ({
               <span className="text-stone-500">Fecha: </span>
               {quote.date}
             </p>
-            {quote.validUntilDate && (
+            {quote.showValidUntil !== false && quote.validUntilDate && (
               <p className="text-[11px] text-stone-500">
                 Válida hasta: {quote.validUntilDate}
               </p>
             )}
-            {quote.quoteNumber && (
+            {quote.showQuoteNumber !== false && quote.quoteNumber && (
               <p className="text-[10px] text-stone-400 font-mono">
                 Nº {quote.quoteNumber}
               </p>

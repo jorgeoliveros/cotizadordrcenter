@@ -84,9 +84,11 @@ export interface BrandSettings {
 export interface Quote {
   id: string;
   quoteNumber: string;
+  showQuoteNumber?: boolean;
   title: string;
   date: string;
   validUntilDate?: string;
+  showValidUntil?: boolean;
   company: CompanyInfo;
   client: {
     id?: string;

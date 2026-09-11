@@ -103,9 +103,11 @@ export const INITIAL_FREQUENT_CLIENTS: Client[] = [
 export const INITIAL_QUOTE: Quote = {
   id: 'cot-2026-001',
   quoteNumber: 'COT-2026-001',
+  showQuoteNumber: true,
   title: 'COTIZACIÓN',
   date: '18 Feb, 2026',
   validUntilDate: '18 Mar, 2026',
+  showValidUntil: true,
   company: {
     name: 'Dra. Laura M. Oliveros Valencia',
     specialty: 'Dermatologa',

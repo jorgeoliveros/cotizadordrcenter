@@ -46,7 +46,7 @@ export const EmailModal: React.FC<EmailModalProps> = ({
         : '',
       quote.includeIva
         ? `IVA (${quote.ivaRate}%): ${formatCurrency(totals.ivaAmount, quote.currency)}`
-        : 'IVA: No incluido (aplica en caso de requerir factura electrónica)',
+        : '',
       `\nTOTAL FINAL: ${formatCurrency(totals.grandTotal, quote.currency)}`,
     ]
       .filter(Boolean)

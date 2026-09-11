@@ -11,6 +11,11 @@ import {
   Calendar,
   Layers,
   HelpCircle,
+  Hash,
+  FileText,
+  Phone,
+  Mail,
+  MapPin,
 } from 'lucide-react';
 import { Quote, QuoteItem, QuoteNote } from '../types';
 import { formatCurrency } from '../utils/formatters';
@@ -113,7 +118,7 @@ export const QuoteEditor: React.FC<QuoteEditorProps> = ({
         <div className="flex items-center justify-between pb-3 border-b border-stone-100">
           <h3 className="text-xs font-bold uppercase tracking-wider text-stone-900 flex items-center gap-2">
             <UserCheck className="w-4 h-4 text-stone-600" />
-            Datos del Cliente & Fecha
+            Datos de la Cotización & Cliente
           </h3>
           <button
             type="button"
@@ -125,57 +130,164 @@ export const QuoteEditor: React.FC<QuoteEditorProps> = ({
           </button>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
-          <div>
-            <label className="block text-stone-600 font-medium mb-1">
-              Nombre del Cliente
-            </label>
-            <input
-              type="text"
-              value={quote.client.name}
-              onChange={(e) => handleClientChange('name', e.target.value)}
-              className="w-full px-3 py-1.5 rounded-lg border border-stone-300 bg-stone-50/40 focus:bg-white text-xs font-medium"
-              placeholder="Ej. Ericka Sanchez Segura"
-            />
+        {/* Parámetros de la Cotización: Nº Cotización, Válido hasta, Título y Fecha */}
+        <div className="p-3.5 rounded-lg border border-stone-200 bg-stone-50/60 space-y-3 text-xs">
+          <div className="text-[11px] font-bold text-stone-700 uppercase tracking-wider flex items-center gap-1.5">
+            <FileText className="w-3.5 h-3.5 text-stone-500" />
+            Identificación y Vigencia del Documento
           </div>
 
-          <div>
-            <label className="block text-stone-600 font-medium mb-1">
-              Correo Electrónico
-            </label>
-            <input
-              type="email"
-              value={quote.client.email}
-              onChange={(e) => handleClientChange('email', e.target.value)}
-              className="w-full px-3 py-1.5 rounded-lg border border-stone-300 bg-stone-50/40 focus:bg-white text-xs"
-              placeholder="sanchez.ericka33@gmail.com"
-            />
-          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {/* Nº Cotización */}
+            <div className="space-y-1">
+              <div className="flex items-center justify-between">
+                <label className="text-stone-700 font-semibold flex items-center gap-1">
+                  <Hash className="w-3 h-3 text-stone-500" />
+                  Nº de Cotización
+                </label>
+                <label className="inline-flex items-center gap-1 text-[11px] text-stone-600 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={quote.showQuoteNumber !== false}
+                    onChange={(e) =>
+                      onChangeQuote({ ...quote, showQuoteNumber: e.target.checked })
+                    }
+                    className="w-3.5 h-3.5 rounded border-stone-300 text-stone-900 focus:ring-stone-500 cursor-pointer"
+                  />
+                  <span>Mostrar</span>
+                </label>
+              </div>
+              <input
+                type="text"
+                value={quote.quoteNumber || ''}
+                onChange={(e) =>
+                  onChangeQuote({ ...quote, quoteNumber: e.target.value })
+                }
+                className="w-full px-3 py-1.5 rounded-lg border border-stone-300 bg-white text-xs font-medium"
+                placeholder="COT-2026-001"
+              />
+            </div>
 
-          <div>
-            <label className="block text-stone-600 font-medium mb-1">
-              Teléfono / WhatsApp
-            </label>
-            <input
-              type="text"
-              value={quote.client.phone || ''}
-              onChange={(e) => handleClientChange('phone', e.target.value)}
-              className="w-full px-3 py-1.5 rounded-lg border border-stone-300 bg-stone-50/40 focus:bg-white text-xs"
-              placeholder="+(506) 8834-1920"
-            />
-          </div>
+            {/* Válido hasta */}
+            <div className="space-y-1">
+              <div className="flex items-center justify-between">
+                <label className="text-stone-700 font-semibold flex items-center gap-1">
+                  <Calendar className="w-3 h-3 text-stone-500" />
+                  Válido hasta
+                </label>
+                <label className="inline-flex items-center gap-1 text-[11px] text-stone-600 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={quote.showValidUntil !== false}
+                    onChange={(e) =>
+                      onChangeQuote({ ...quote, showValidUntil: e.target.checked })
+                    }
+                    className="w-3.5 h-3.5 rounded border-stone-300 text-stone-900 focus:ring-stone-500 cursor-pointer"
+                  />
+                  <span>Mostrar</span>
+                </label>
+              </div>
+              <input
+                type="text"
+                value={quote.validUntilDate || ''}
+                onChange={(e) =>
+                  onChangeQuote({ ...quote, validUntilDate: e.target.value })
+                }
+                className="w-full px-3 py-1.5 rounded-lg border border-stone-300 bg-white text-xs font-medium"
+                placeholder="18 Mar, 2026"
+              />
+            </div>
 
-          <div>
-            <label className="block text-stone-600 font-medium mb-1">
-              Fecha de Emisión
-            </label>
-            <input
-              type="text"
-              value={quote.date}
-              onChange={(e) => onChangeQuote({ ...quote, date: e.target.value })}
-              className="w-full px-3 py-1.5 rounded-lg border border-stone-300 bg-stone-50/40 focus:bg-white text-xs font-medium"
-              placeholder="18 Feb, 2026"
-            />
+            {/* Título de Cotización */}
+            <div>
+              <label className="block text-stone-600 font-medium mb-1">
+                Título del Documento
+              </label>
+              <input
+                type="text"
+                value={quote.title || ''}
+                onChange={(e) =>
+                  onChangeQuote({ ...quote, title: e.target.value })
+                }
+                className="w-full px-3 py-1.5 rounded-lg border border-stone-300 bg-white text-xs font-medium"
+                placeholder="COTIZACIÓN"
+              />
+            </div>
+
+            {/* Fecha de Emisión */}
+            <div>
+              <label className="block text-stone-600 font-medium mb-1">
+                Fecha de Emisión
+              </label>
+              <input
+                type="text"
+                value={quote.date}
+                onChange={(e) => onChangeQuote({ ...quote, date: e.target.value })}
+                className="w-full px-3 py-1.5 rounded-lg border border-stone-300 bg-white text-xs font-medium"
+                placeholder="18 Feb, 2026"
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Datos del Cliente */}
+        <div>
+          <div className="text-[11px] font-bold text-stone-700 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+            <UserCheck className="w-3.5 h-3.5 text-stone-500" />
+            Datos del Cliente
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+            <div>
+              <label className="block text-stone-600 font-medium mb-1">
+                Nombre del Cliente
+              </label>
+              <input
+                type="text"
+                value={quote.client.name}
+                onChange={(e) => handleClientChange('name', e.target.value)}
+                className="w-full px-3 py-1.5 rounded-lg border border-stone-300 bg-stone-50/40 focus:bg-white text-xs font-medium"
+                placeholder="Ej. Ericka Sanchez Segura"
+              />
+            </div>
+
+            <div>
+              <label className="block text-stone-600 font-medium mb-1">
+                Correo Electrónico
+              </label>
+              <input
+                type="email"
+                value={quote.client.email}
+                onChange={(e) => handleClientChange('email', e.target.value)}
+                className="w-full px-3 py-1.5 rounded-lg border border-stone-300 bg-stone-50/40 focus:bg-white text-xs"
+                placeholder="sanchez.ericka33@gmail.com"
+              />
+            </div>
+
+            <div>
+              <label className="block text-stone-600 font-medium mb-1">
+                Teléfono / WhatsApp
+              </label>
+              <input
+                type="text"
+                value={quote.client.phone || ''}
+                onChange={(e) => handleClientChange('phone', e.target.value)}
+                className="w-full px-3 py-1.5 rounded-lg border border-stone-300 bg-stone-50/40 focus:bg-white text-xs"
+                placeholder="+(506) 8834-1920"
+              />
+            </div>
+
+            <div>
+              <label className="block text-stone-600 font-medium mb-1">
+                Cédula / Identificación Tributaria
+              </label>
+              <input
+                type="text"
+                value={quote.client.taxId || ''}
+                onChange={(e) => handleClientChange('taxId', e.target.value)}
+                className="w-full px-3 py-1.5 rounded-lg border border-stone-300 bg-stone-50/40 focus:bg-white text-xs"
+                placeholder="1-1452-0891"
+              />
+            </div>
           </div>
         </div>
       </div>
@@ -601,43 +713,95 @@ export const QuoteEditor: React.FC<QuoteEditorProps> = ({
               type="text"
               value={quote.company.name}
               onChange={(e) => handleCompanyChange('name', e.target.value)}
-              className="w-full px-3 py-1.5 rounded-lg border border-stone-300 bg-stone-50/40 text-xs font-semibold"
+              className="w-full px-3 py-1.5 rounded-lg border border-stone-300 bg-stone-50/40 focus:bg-white text-xs font-semibold"
+              placeholder="Dra. Laura M. Oliveros Valencia"
             />
           </div>
 
           <div>
             <label className="block text-stone-600 font-medium mb-1">
-              Especialidad
+              Especialidad / Título
             </label>
             <input
               type="text"
               value={quote.company.specialty}
               onChange={(e) => handleCompanyChange('specialty', e.target.value)}
-              className="w-full px-3 py-1.5 rounded-lg border border-stone-300 bg-stone-50/40 text-xs"
+              className="w-full px-3 py-1.5 rounded-lg border border-stone-300 bg-stone-50/40 focus:bg-white text-xs"
+              placeholder="Dermatología Clínica y Estética"
             />
           </div>
 
           <div>
             <label className="block text-stone-600 font-medium mb-1">
-              Cédula Jurídica / Física
+              Cédula Jurídica / Física / ID
             </label>
             <input
               type="text"
               value={quote.company.taxId}
               onChange={(e) => handleCompanyChange('taxId', e.target.value)}
-              className="w-full px-3 py-1.5 rounded-lg border border-stone-300 bg-stone-50/40 text-xs"
+              className="w-full px-3 py-1.5 rounded-lg border border-stone-300 bg-stone-50/40 focus:bg-white text-xs"
+              placeholder="Cedula 801100379"
             />
           </div>
 
           <div>
-            <label className="block text-stone-600 font-medium mb-1">
-              Ubicación / Dirección
+            <label className="block text-stone-600 font-medium mb-1 flex items-center gap-1">
+              <Phone className="w-3 h-3 text-stone-500" />
+              Teléfono del Emisor
             </label>
             <input
               type="text"
-              value={quote.company.addressLine1}
+              value={quote.company.phone || ''}
+              onChange={(e) => handleCompanyChange('phone', e.target.value)}
+              className="w-full px-3 py-1.5 rounded-lg border border-stone-300 bg-stone-50/40 focus:bg-white text-xs font-medium"
+              placeholder="+(506) 7261-4743"
+            />
+          </div>
+
+          <div>
+            <label className="block text-stone-600 font-medium mb-1 flex items-center gap-1">
+              <Mail className="w-3 h-3 text-stone-500" />
+              Correo Electrónico del Emisor
+            </label>
+            <input
+              type="email"
+              value={quote.company.email || ''}
+              onChange={(e) => handleCompanyChange('email', e.target.value)}
+              className="w-full px-3 py-1.5 rounded-lg border border-stone-300 bg-stone-50/40 focus:bg-white text-xs"
+              placeholder="info@vitapielcr.com"
+            />
+          </div>
+
+          <div>
+            <label className="block text-stone-600 font-medium mb-1 flex items-center gap-1">
+              <MapPin className="w-3 h-3 text-stone-500" />
+              Ubicación / Dirección Principal
+            </label>
+            <input
+              type="text"
+              value={quote.company.addressLine1 || ''}
               onChange={(e) => handleCompanyChange('addressLine1', e.target.value)}
-              className="w-full px-3 py-1.5 rounded-lg border border-stone-300 bg-stone-50/40 text-xs"
+              className="w-full px-3 py-1.5 rounded-lg border border-stone-300 bg-stone-50/40 focus:bg-white text-xs"
+              placeholder="Calle 12 Av 16 Heredia."
+            />
+          </div>
+
+          <div className="sm:col-span-2">
+            <label className="block text-stone-600 font-medium mb-1 flex items-center justify-between">
+              <span className="flex items-center gap-1">
+                <MapPin className="w-3 h-3 text-stone-500" />
+                Dirección Línea 2 / Detalles de Ubicación (Piso, Edificio, Señas)
+              </span>
+              <span className="text-[10px] text-stone-400 font-normal">
+                Opcional
+              </span>
+            </label>
+            <input
+              type="text"
+              value={quote.company.addressLine2 || ''}
+              onChange={(e) => handleCompanyChange('addressLine2', e.target.value)}
+              className="w-full px-3 py-1.5 rounded-lg border border-stone-300 bg-stone-50/40 focus:bg-white text-xs"
+              placeholder="Oficentro Valar, Segundo Piso"
             />
           </div>
         </div>
