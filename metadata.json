@@ -1,0 +1,6 @@
+{
+  "name": "Cotizador Profesional",
+  "description": "Sistema de cotizaciones profesional y elegante con personalización de marca, cálculo de IVA 13%, registro de clientes frecuentes, firma y sello digital, y exportación a PDF.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
