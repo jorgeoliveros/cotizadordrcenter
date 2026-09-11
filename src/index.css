@@ -71,7 +71,10 @@
     max-height: 100vh !important;
     min-height: 0 !important;
     margin: 0 !important;
-    padding: 8mm 10mm !important;
+    padding: 15mm 10mm !important;
+    background: #ffffff !important;
+    background-color: #ffffff !important;
+    color: #1a1a1a !important;
     box-sizing: border-box !important;
     box-shadow: none !important;
     border: none !important;

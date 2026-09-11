@@ -16,6 +16,24 @@ export const QuoteDocument: React.FC<QuoteDocumentProps> = ({
   const { brand } = quote;
   const theme = brand.backgroundTheme || 'minimalist';
 
+  // Helper to convert hex to rgba safely for canvas and PDF export without color parsing defects
+  const hexToRgba = (hex: string, alpha: number): string => {
+    if (!hex) return `rgba(146, 64, 14, ${alpha})`;
+    let clean = hex.replace('#', '').trim();
+    if (clean.length === 3) {
+      clean = clean.split('').map((c) => c + c).join('');
+    }
+    if (clean.length >= 6) {
+      const r = parseInt(clean.substring(0, 2), 16);
+      const g = parseInt(clean.substring(2, 4), 16);
+      const b = parseInt(clean.substring(4, 6), 16);
+      if (!isNaN(r) && !isNaN(g) && !isNaN(b)) {
+        return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+      }
+    }
+    return `rgba(146, 64, 14, ${alpha})`;
+  };
+
   // Font family mappings
   const headingFontClass = {
     'Cormorant Garamond': 'font-["Cormorant_Garamond",serif]',
@@ -32,39 +50,6 @@ export const QuoteDocument: React.FC<QuoteDocumentProps> = ({
     'Plus Jakarta Sans': 'font-["Plus_Jakarta_Sans",sans-serif]',
   }[brand.fontBody] || 'font-sans';
 
-  // Base paper color
-  const basePaperColor = {
-    white: '#ffffff',
-    ivory: '#faf8f5',
-    'warm-stone': '#f7f5f2',
-    'slate-tint': '#f8fafc',
-  }[brand.paperBg] || '#ffffff';
-
-  // Dynamic background styling derived from the logo's color palette
-  const getDocumentBackgroundStyle = (): React.CSSProperties => {
-    if (theme === 'modern') {
-      return {
-        backgroundColor: basePaperColor,
-        backgroundImage: `
-          radial-gradient(ellipse 700px 380px at 98% 2%, ${brand.accentColor}12 0%, transparent 65%),
-          radial-gradient(ellipse 650px 350px at 2% 98%, ${brand.primaryColor}0d 0%, transparent 65%)
-        `,
-      };
-    }
-    if (theme === 'professional') {
-      return {
-        backgroundColor: basePaperColor,
-        backgroundImage: `
-          linear-gradient(to bottom, ${brand.primaryColor}06 0px, transparent 120px)
-        `,
-      };
-    }
-    // Minimalist: Clean paper background
-    return {
-      backgroundColor: basePaperColor,
-    };
-  };
-
   return (
     <div
       id="quotation-document-sheet"
@@ -74,32 +59,46 @@ export const QuoteDocument: React.FC<QuoteDocumentProps> = ({
           : 'shadow-2xl rounded-sm border border-stone-200/90'
       }`}
       style={{
-        ...getDocumentBackgroundStyle(),
-        color: '#1c1917',
+        backgroundColor: '#ffffff',
+        color: '#1a1a1a',
+        paddingTop: '20px',
         boxSizing: 'border-box',
       }}
     >
-      {/* PROFESSIONAL THEME: Top Corporate Gradient Accent Bar */}
+      {/* PROFESSIONAL THEME: Top Corporate Accent Bar */}
       {theme === 'professional' && (
         <div
           className="absolute top-0 left-0 right-0 h-1.5"
           style={{
-            background: `linear-gradient(90deg, ${brand.primaryColor} 0%, ${brand.accentColor} 100%)`,
+            backgroundColor: brand.primaryColor,
           }}
         />
       )}
 
-      {/* MODERN THEME: Delicate geometric corner accent */}
+      {/* MODERN THEME: Decorative Header Shape (Preserves golden/brown tones in PDF canvas without turning dark) */}
       {theme === 'modern' && (
-        <div
-          className="absolute top-0 right-0 w-28 h-28 pointer-events-none opacity-40 overflow-hidden"
-        >
-          <div
-            className="w-40 h-40 transform rotate-45 translate-x-16 -translate-y-24"
-            style={{
-              background: `linear-gradient(135deg, ${brand.accentColor}25 0%, transparent 70%)`,
-            }}
-          />
+        <div className="absolute top-0 right-0 w-48 h-48 pointer-events-none overflow-hidden select-none z-0">
+          <svg
+            viewBox="0 0 160 160"
+            className="w-full h-full"
+            style={{ display: 'block' }}
+          >
+            <defs>
+              <linearGradient id="modernHeaderAccentShape" x1="100%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" stopColor={brand.accentColor || '#92400e'} stopOpacity="0.38" />
+                <stop offset="60%" stopColor={brand.accentColor || '#92400e'} stopOpacity="0.14" />
+                <stop offset="100%" stopColor={brand.accentColor || '#92400e'} stopOpacity="0" />
+              </linearGradient>
+              <linearGradient id="modernHeaderFacet2" x1="100%" y1="0%" x2="30%" y2="70%">
+                <stop offset="0%" stopColor={brand.primaryColor || '#78350f'} stopOpacity="0.2" />
+                <stop offset="100%" stopColor={brand.primaryColor || '#78350f'} stopOpacity="0" />
+              </linearGradient>
+            </defs>
+            {/* Primary architectural triangle in warm golden/brown tone */}
+            <polygon points="160,0 35,0 160,125" fill="url(#modernHeaderAccentShape)" />
+            {/* Overlapping facet adding depth */}
+            <polygon points="160,0 85,0 160,75" fill="url(#modernHeaderFacet2)" />
+          </svg>
         </div>
       )}
 
@@ -231,9 +230,9 @@ export const QuoteDocument: React.FC<QuoteDocumentProps> = ({
               <div
                 className="inline-block px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wider mb-1 print:mb-0.5 print:py-0.5 print:px-2"
                 style={{
-                  backgroundColor: `${brand.primaryColor}10`,
+                  backgroundColor: hexToRgba(brand.primaryColor || '#78350f', 0.08),
                   color: brand.primaryColor,
-                  border: `1px solid ${brand.primaryColor}25`,
+                  border: `1px solid ${hexToRgba(brand.primaryColor || '#78350f', 0.22)}`,
                 }}
               >
                 {quote.title || 'COTIZACIÓN'}
@@ -292,9 +291,9 @@ export const QuoteDocument: React.FC<QuoteDocumentProps> = ({
               ) : theme === 'modern' ? (
                 <tr
                   style={{
-                    backgroundColor: `${brand.primaryColor}0a`,
+                    backgroundColor: hexToRgba(brand.primaryColor || '#78350f', 0.06),
                     color: brand.primaryColor,
-                    borderBottom: `2px solid ${brand.primaryColor}30`,
+                    borderBottom: `2px solid ${hexToRgba(brand.primaryColor || '#78350f', 0.25)}`,
                   }}
                   className="text-xs font-bold uppercase tracking-wider"
                 >
@@ -383,8 +382,8 @@ export const QuoteDocument: React.FC<QuoteDocumentProps> = ({
             style={
               theme === 'modern'
                 ? {
-                    backgroundColor: `${brand.primaryColor}04`,
-                    borderColor: `${brand.primaryColor}18`,
+                    backgroundColor: hexToRgba(brand.primaryColor || '#78350f', 0.03),
+                    borderColor: hexToRgba(brand.primaryColor || '#78350f', 0.16),
                   }
                 : undefined
             }
