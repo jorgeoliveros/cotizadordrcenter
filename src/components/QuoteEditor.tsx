@@ -16,15 +16,22 @@ import {
   Phone,
   Mail,
   MapPin,
+  Stamp,
+  Move,
+  AlignCenter,
+  Columns,
+  Upload,
+  Sparkles,
 } from 'lucide-react';
 import { Quote, QuoteItem, QuoteNote } from '../types';
 import { formatCurrency } from '../utils/formatters';
+import { DEFAULT_STAMP_SVG } from '../data/defaultData';
 
 interface QuoteEditorProps {
   quote: Quote;
   onChangeQuote: (quote: Quote) => void;
   onOpenClientsModal: () => void;
-  onOpenSignatureModal: () => void;
+  onOpenSignatureModal: (tab?: 'draw' | 'upload-sig' | 'stamp' | 'position') => void;
   onOpenBrandModal: () => void;
 }
 
@@ -804,6 +811,180 @@ export const QuoteEditor: React.FC<QuoteEditorProps> = ({
               placeholder="Oficentro Valar, Segundo Piso"
             />
           </div>
+        </div>
+      </div>
+
+      {/* 6. Firma, Sello Oficial & Ubicación */}
+      <div className="bg-white p-5 rounded-xl border border-stone-200 shadow-xs space-y-4">
+        <div className="flex items-center justify-between pb-3 border-b border-stone-100">
+          <h3 className="text-xs font-bold uppercase tracking-wider text-stone-900 flex items-center gap-2">
+            <Stamp className="w-4 h-4 text-stone-600" />
+            Firma, Sello & Ubicación
+          </h3>
+          <button
+            type="button"
+            onClick={() => onOpenSignatureModal('position')}
+            className="px-2.5 py-1 text-xs font-semibold bg-stone-900 text-white hover:bg-stone-800 rounded-lg transition-colors flex items-center gap-1.5"
+          >
+            <Move className="w-3 h-3" />
+            Ajustar en Ventana
+          </button>
+        </div>
+
+        {/* Layout selection */}
+        <div>
+          <label className="block text-stone-600 font-medium text-xs mb-1.5">
+            Ubicación en el pie de página:
+          </label>
+          <div className="grid grid-cols-3 gap-2 text-xs">
+            {[
+              { id: 'center', label: 'Centrado', icon: AlignCenter },
+              { id: 'split', label: 'Estándar', icon: Columns },
+              { id: 'free', label: 'Libre', icon: Move },
+            ].map((mode) => {
+              const Icon = mode.icon;
+              const isSelected = (quote.signee.layoutMode || 'split') === mode.id;
+              return (
+                <button
+                  key={mode.id}
+                  type="button"
+                  onClick={() =>
+                    onChangeQuote({
+                      ...quote,
+                      signee: {
+                        ...quote.signee,
+                        layoutMode: mode.id as any,
+                      },
+                    })
+                  }
+                  className={`py-2 px-2 rounded-lg border text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors ${
+                    isSelected
+                      ? 'border-stone-900 bg-stone-900 text-white'
+                      : 'border-stone-200 hover:bg-stone-50 text-stone-700'
+                  }`}
+                >
+                  <Icon className="w-3.5 h-3.5" />
+                  {mode.label}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Sello selection */}
+        <div>
+          <label className="block text-stone-600 font-medium text-xs mb-1.5">
+            Selección de Sello Oficial:
+          </label>
+          <div className="grid grid-cols-3 gap-2 text-xs">
+            <button
+              type="button"
+              onClick={() =>
+                onChangeQuote({
+                  ...quote,
+                  signee: {
+                    ...quote.signee,
+                    stampType: 'default',
+                    stampImage: quote.signee.defaultStampImage || DEFAULT_STAMP_SVG,
+                    useGeneratedStamp: false,
+                    showStamp: true,
+                  },
+                })
+              }
+              className={`py-2 px-2 rounded-lg border text-xs font-semibold transition-colors ${
+                (quote.signee.stampType || 'default') === 'default' && !quote.signee.useGeneratedStamp
+                  ? 'border-stone-900 bg-stone-900 text-white'
+                  : 'border-stone-200 hover:bg-stone-50 text-stone-700'
+              }`}
+            >
+              Plantilla
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                if (quote.signee.customStampImage) {
+                  onChangeQuote({
+                    ...quote,
+                    signee: {
+                      ...quote.signee,
+                      stampType: 'custom',
+                      stampImage: quote.signee.customStampImage,
+                      useGeneratedStamp: false,
+                      showStamp: true,
+                    },
+                  });
+                } else {
+                  onOpenSignatureModal('stamp');
+                }
+              }}
+              className={`py-2 px-2 rounded-lg border text-xs font-semibold transition-colors ${
+                quote.signee.stampType === 'custom'
+                  ? 'border-stone-900 bg-stone-900 text-white'
+                  : 'border-stone-200 hover:bg-stone-50 text-stone-700'
+              }`}
+            >
+              {quote.signee.customStampImage ? 'Personalizado' : '+ Subir Sello'}
+            </button>
+            <button
+              type="button"
+              onClick={() =>
+                onChangeQuote({
+                  ...quote,
+                  signee: {
+                    ...quote.signee,
+                    stampType: 'generated',
+                    useGeneratedStamp: true,
+                    showStamp: true,
+                  },
+                })
+              }
+              className={`py-2 px-2 rounded-lg border text-xs font-semibold transition-colors ${
+                quote.signee.stampType === 'generated' || quote.signee.useGeneratedStamp
+                  ? 'border-stone-900 bg-stone-900 text-white'
+                  : 'border-stone-200 hover:bg-stone-50 text-stone-700'
+              }`}
+            >
+              Generado
+            </button>
+          </div>
+        </div>
+
+        {/* Toggles */}
+        <div className="flex items-center justify-between pt-2 border-t border-stone-100 text-xs">
+          <label className="flex items-center gap-2 cursor-pointer text-stone-700 font-medium">
+            <input
+              type="checkbox"
+              checked={quote.signee.showSignature}
+              onChange={(e) =>
+                onChangeQuote({
+                  ...quote,
+                  signee: {
+                    ...quote.signee,
+                    showSignature: e.target.checked,
+                  },
+                })
+              }
+              className="w-4 h-4 rounded border-stone-300 text-stone-900"
+            />
+            Mostrar Firma
+          </label>
+          <label className="flex items-center gap-2 cursor-pointer text-stone-700 font-medium">
+            <input
+              type="checkbox"
+              checked={quote.signee.showStamp}
+              onChange={(e) =>
+                onChangeQuote({
+                  ...quote,
+                  signee: {
+                    ...quote.signee,
+                    showStamp: e.target.checked,
+                  },
+                })
+              }
+              className="w-4 h-4 rounded border-stone-300 text-stone-900"
+            />
+            Mostrar Sello
+          </label>
         </div>
       </div>
     </div>

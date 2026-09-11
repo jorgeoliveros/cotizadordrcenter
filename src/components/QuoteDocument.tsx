@@ -1,16 +1,21 @@
-import React from 'react';
-import { Quote } from '../types';
+import React, { useRef } from 'react';
+import { Quote, SigneeInfo } from '../types';
 import { calculateQuoteTotals, formatCurrency } from '../utils/formatters';
+import { DEFAULT_STAMP_SVG } from '../data/defaultData';
 
 interface QuoteDocumentProps {
   quote: Quote;
   onEditItem?: (index: number) => void;
   isPrinting?: boolean;
+  onChangeSignee?: (signee: SigneeInfo) => void;
+  onOpenSignatureModal?: (tab?: 'draw' | 'upload-sig' | 'stamp' | 'position') => void;
 }
 
 export const QuoteDocument: React.FC<QuoteDocumentProps> = ({
   quote,
   isPrinting = false,
+  onChangeSignee,
+  onOpenSignatureModal,
 }) => {
   const totals = calculateQuoteTotals(quote);
   const { brand } = quote;
@@ -32,6 +37,72 @@ export const QuoteDocument: React.FC<QuoteDocumentProps> = ({
       }
     }
     return `rgba(146, 64, 14, ${alpha})`;
+  };
+
+  // Dragging interaction for signature and stamp
+  const dragRef = useRef<{
+    item: 'signature' | 'stamp';
+    startX: number;
+    startY: number;
+    initialX: number;
+    initialY: number;
+  } | null>(null);
+
+  const handleStartDrag = (
+    item: 'signature' | 'stamp',
+    e: React.MouseEvent | React.TouchEvent
+  ) => {
+    if (isPrinting || !onChangeSignee) return;
+    const target = e.target as HTMLElement;
+    if (target.closest('button') || target.closest('input')) return;
+
+    const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
+    const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
+    const initialX =
+      item === 'signature'
+        ? (quote.signee.signatureOffsetX ?? 0)
+        : (quote.signee.stampOffsetX ?? 0);
+    const initialY =
+      item === 'signature'
+        ? (quote.signee.signatureOffsetY ?? 0)
+        : (quote.signee.stampOffsetY ?? 0);
+
+    dragRef.current = { item, startX: clientX, startY: clientY, initialX, initialY };
+
+    const handleMove = (ev: MouseEvent | TouchEvent) => {
+      if (!dragRef.current) return;
+      const curX = 'touches' in ev ? ev.touches[0].clientX : ev.clientX;
+      const curY = 'touches' in ev ? ev.touches[0].clientY : ev.clientY;
+      const dx = Math.round(curX - dragRef.current.startX);
+      const dy = Math.round(curY - dragRef.current.startY);
+
+      if (dragRef.current.item === 'signature') {
+        onChangeSignee({
+          ...quote.signee,
+          signatureOffsetX: dragRef.current.initialX + dx,
+          signatureOffsetY: dragRef.current.initialY + dy,
+        });
+      } else {
+        onChangeSignee({
+          ...quote.signee,
+          stampOffsetX: dragRef.current.initialX + dx,
+          stampOffsetY: dragRef.current.initialY + dy,
+        });
+      }
+    };
+
+    const handleEnd = () => {
+      dragRef.current = null;
+      window.removeEventListener('mousemove', handleMove);
+      window.removeEventListener('mouseup', handleEnd);
+      window.removeEventListener('touchmove', handleMove);
+      window.removeEventListener('touchend', handleEnd);
+    };
+
+    window.addEventListener('mousemove', handleMove);
+    window.addEventListener('mouseup', handleEnd);
+    window.addEventListener('touchmove', handleMove);
+    window.addEventListener('touchend', handleEnd);
   };
 
   // Font family mappings
@@ -471,83 +542,164 @@ export const QuoteDocument: React.FC<QuoteDocumentProps> = ({
 
       {/* Signature and Digital Stamp Section - Sits cleanly at the base */}
       <div
-        className={`pt-5 mt-auto print:pt-2 print:mt-auto print-avoid-break ${
+        className={`pt-5 mt-auto print:pt-2 print:mt-auto print-avoid-break relative ${
           theme === 'professional'
             ? 'border-t-2 border-stone-200'
             : 'border-t border-stone-200/80'
         }`}
       >
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-6 relative print:gap-3">
-          {/* Signee Details & Signature Stroke */}
-          <div className="space-y-1 max-w-sm relative z-10">
-            {/* Signature image / stroke */}
-            {quote.signee.showSignature && quote.signee.signatureImage && (
-              <div className="h-14 w-48 mb-1 flex items-end print:h-10 print:mb-0.5">
-                <img
-                  src={quote.signee.signatureImage}
-                  alt="Firma Digital"
-                  className="max-h-14 max-w-full object-contain filter contrast-125 print:max-h-10"
-                />
-              </div>
-            )}
+        {(() => {
+          const layoutMode = quote.signee.layoutMode || 'split';
+          const isCentered = layoutMode === 'center';
+          const isRight = layoutMode === 'right';
+          const isLeft = layoutMode === 'left';
+          const stampPos = quote.signee.stampPosition || 'beside-right';
 
-            {/* Line for signature */}
-            <div className="w-52 h-[1px] bg-stone-400/80 mb-2 print:mb-1"></div>
+          const stampSource =
+            quote.signee.stampType ||
+            (quote.signee.useGeneratedStamp
+              ? 'generated'
+              : quote.signee.customStampImage && quote.signee.stampImage === quote.signee.customStampImage
+              ? 'custom'
+              : 'default');
 
-            <h5 className="text-sm font-bold text-stone-900">
-              {quote.signee.name}
-            </h5>
-            {quote.signee.role && (
-              <p className="text-xs text-stone-700">{quote.signee.role}</p>
-            )}
-            {quote.signee.company && (
-              <p className="text-xs text-stone-600 font-medium">
-                {quote.signee.company}
-              </p>
-            )}
-            {quote.signee.whatsapp && (
-              <p className="text-xs text-stone-600">
-                Whatsapp: {quote.signee.whatsapp}
-              </p>
-            )}
-          </div>
+          const activeStampImg =
+            stampSource === 'custom'
+              ? quote.signee.customStampImage || quote.signee.stampImage || DEFAULT_STAMP_SVG
+              : quote.signee.defaultStampImage || quote.signee.stampImage || DEFAULT_STAMP_SVG;
 
-          {/* Official Professional Stamp / Sello */}
-          {quote.signee.showStamp && (
-            <div className="relative transform -rotate-2 sm:rotate-2 self-center sm:self-auto my-1 sm:my-0">
-              {quote.signee.stampImage ? (
-                <div className="relative">
-                  <img
-                    src={quote.signee.stampImage}
-                    alt="Sello Oficial"
-                    className="max-h-24 sm:max-h-28 object-contain opacity-90 drop-shadow-xs print:max-h-16"
-                  />
-                </div>
-              ) : quote.signee.useGeneratedStamp ? (
+          const sigX = quote.signee.signatureOffsetX ?? 0;
+          const sigY = quote.signee.signatureOffsetY ?? 0;
+          const stampX = quote.signee.stampOffsetX ?? 0;
+          const stampY = quote.signee.stampOffsetY ?? 0;
+          const stampRot = quote.signee.stampRotation ?? 2;
+          const stampScale = quote.signee.stampScale ?? 1;
+
+          return (
+            <div
+              className={`flex flex-col sm:flex-row gap-6 relative print:gap-3 ${
+                isCentered
+                  ? 'justify-center items-center text-center'
+                  : isRight
+                  ? 'justify-end items-end text-right'
+                  : isLeft
+                  ? 'justify-start items-start text-left'
+                  : 'justify-between items-start sm:items-end'
+              }`}
+            >
+              {/* Signee Details & Signature Stroke */}
+              <div
+                onMouseDown={(e) => handleStartDrag('signature', e)}
+                onTouchStart={(e) => handleStartDrag('signature', e)}
+                style={{
+                  transform: `translate(${sigX}px, ${sigY}px)`,
+                  cursor: !isPrinting && onChangeSignee ? 'grab' : 'default',
+                }}
+                className={`space-y-1 max-w-sm relative z-10 transition-transform ${
+                  isCentered
+                    ? 'text-center flex flex-col items-center'
+                    : isRight
+                    ? 'text-right flex flex-col items-end'
+                    : 'text-left flex flex-col items-start'
+                }`}
+                title={!isPrinting && onChangeSignee ? 'Arrastrar para mover la firma' : undefined}
+              >
+                {/* Signature image / stroke */}
+                {quote.signee.showSignature && quote.signee.signatureImage && (
+                  <div
+                    className={`h-14 w-48 mb-1 flex items-end print:h-10 print:mb-0.5 ${
+                      isCentered
+                        ? 'justify-center mx-auto'
+                        : isRight
+                        ? 'justify-end ml-auto'
+                        : 'justify-start'
+                    }`}
+                  >
+                    <img
+                      src={quote.signee.signatureImage}
+                      alt="Firma Digital"
+                      className="max-h-14 max-w-full object-contain filter contrast-125 print:max-h-10 pointer-events-none select-none"
+                    />
+                  </div>
+                )}
+
+                {/* Line for signature */}
                 <div
-                  className="border-2 border-dashed rounded-lg p-2.5 text-center min-w-[200px] max-w-[240px] opacity-85 select-none print:p-1.5 print:min-w-[180px]"
+                  className={`w-52 h-[1px] bg-stone-400/80 mb-2 print:mb-1 ${
+                    isCentered ? 'mx-auto' : isRight ? 'ml-auto' : ''
+                  }`}
+                ></div>
+
+                <h5 className="text-sm font-bold text-stone-900">
+                  {quote.signee.name}
+                </h5>
+                {quote.signee.role && (
+                  <p className="text-xs text-stone-700">{quote.signee.role}</p>
+                )}
+                {quote.signee.company && (
+                  <p className="text-xs text-stone-600 font-medium">
+                    {quote.signee.company}
+                  </p>
+                )}
+                {quote.signee.whatsapp && (
+                  <p className="text-xs text-stone-600">
+                    Whatsapp: {quote.signee.whatsapp}
+                  </p>
+                )}
+              </div>
+
+              {/* Official Professional Stamp / Sello */}
+              {quote.signee.showStamp && (
+                <div
+                  onMouseDown={(e) => handleStartDrag('stamp', e)}
+                  onTouchStart={(e) => handleStartDrag('stamp', e)}
                   style={{
-                    borderColor: quote.signee.stampDetails.color || '#475569',
-                    color: quote.signee.stampDetails.color || '#334155',
+                    transform: `translate(${stampX}px, ${stampY}px) rotate(${stampRot}deg) scale(${stampScale})`,
+                    transformOrigin: 'center center',
+                    cursor: !isPrinting && onChangeSignee ? 'grab' : 'default',
                   }}
+                  className={`select-none transition-transform z-20 ${
+                    stampPos === 'overlap'
+                      ? 'absolute top-0 right-2 sm:right-10'
+                      : 'relative self-center sm:self-auto my-1 sm:my-0'
+                  }`}
+                  title={!isPrinting && onChangeSignee ? 'Arrastrar para mover el sello' : undefined}
                 >
-                  <div className="text-xs font-semibold uppercase tracking-wider">
-                    {quote.signee.stampDetails.title}
-                  </div>
-                  <div className="text-[11px] font-medium my-0.5">
-                    {quote.signee.stampDetails.subtitle}
-                  </div>
-                  <div className="text-[10px] opacity-80">
-                    {quote.signee.stampDetails.extraText}
-                  </div>
-                  <div className="text-xs font-bold tracking-widest mt-1">
-                    CÓD. {quote.signee.stampDetails.code}
-                  </div>
+                  {stampSource !== 'generated' ? (
+                    <div className="relative">
+                      <img
+                        src={activeStampImg}
+                        alt="Sello Oficial"
+                        className="max-h-24 sm:max-h-28 object-contain opacity-90 drop-shadow-xs print:max-h-16 pointer-events-none"
+                      />
+                    </div>
+                  ) : (
+                    <div
+                      className="border-2 border-dashed rounded-lg p-2.5 text-center min-w-[200px] max-w-[240px] opacity-85 select-none print:p-1.5 print:min-w-[180px] bg-white/40"
+                      style={{
+                        borderColor: quote.signee.stampDetails.color || '#475569',
+                        color: quote.signee.stampDetails.color || '#334155',
+                      }}
+                    >
+                      <div className="text-xs font-semibold uppercase tracking-wider">
+                        {quote.signee.stampDetails.title}
+                      </div>
+                      <div className="text-[11px] font-medium my-0.5">
+                        {quote.signee.stampDetails.subtitle}
+                      </div>
+                      <div className="text-[10px] opacity-80">
+                        {quote.signee.stampDetails.extraText}
+                      </div>
+                      <div className="text-xs font-bold tracking-widest mt-1">
+                        CÓD. {quote.signee.stampDetails.code}
+                      </div>
+                    </div>
+                  )}
                 </div>
-              ) : null}
+              )}
             </div>
-          )}
-        </div>
+          );
+        })()}
       </div>
     </div>
   );

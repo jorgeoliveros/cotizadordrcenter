@@ -50,7 +50,13 @@ export default function App() {
   const [isClientsOpen, setIsClientsOpen] = useState(false);
   const [isBrandOpen, setIsBrandOpen] = useState(false);
   const [isSignatureOpen, setIsSignatureOpen] = useState(false);
+  const [signatureModalTab, setSignatureModalTab] = useState<'draw' | 'upload-sig' | 'stamp' | 'position'>('stamp');
   const [isEmailOpen, setIsEmailOpen] = useState(false);
+
+  const handleOpenSignatureModal = (tab: 'draw' | 'upload-sig' | 'stamp' | 'position' = 'stamp') => {
+    setSignatureModalTab(tab);
+    setIsSignatureOpen(true);
+  };
 
   // Mobile View Toggle: 'editor' | 'preview'
   const [mobileTab, setMobileTab] = useState<'editor' | 'preview'>('preview');
@@ -242,7 +248,7 @@ export default function App() {
             quote={quote}
             onChangeQuote={setQuote}
             onOpenClientsModal={() => setIsClientsOpen(true)}
-            onOpenSignatureModal={() => setIsSignatureOpen(true)}
+            onOpenSignatureModal={(tab) => handleOpenSignatureModal(tab || 'stamp')}
             onOpenBrandModal={() => setIsBrandOpen(true)}
           />
         </section>
@@ -301,7 +307,12 @@ export default function App() {
 
           {/* Document Sheet Container */}
           <div className="w-full overflow-x-auto pb-8 flex justify-center print:block print:overflow-visible print:p-0 print:m-0 print:w-full">
-            <QuoteDocument quote={quote} isPrinting={false} />
+            <QuoteDocument
+              quote={quote}
+              isPrinting={false}
+              onChangeSignee={handleUpdateSignee}
+              onOpenSignatureModal={handleOpenSignatureModal}
+            />
           </div>
         </section>
       </main>
@@ -338,6 +349,7 @@ export default function App() {
         onClose={() => setIsSignatureOpen(false)}
         signee={quote.signee}
         onUpdateSignee={handleUpdateSignee}
+        initialTab={signatureModalTab}
       />
 
       <EmailModal

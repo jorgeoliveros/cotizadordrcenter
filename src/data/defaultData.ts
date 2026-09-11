@@ -157,9 +157,12 @@ export const INITIAL_QUOTE: Quote = {
     whatsapp: '+(506) 7261-4743',
     signatureImage: DEFAULT_SIGNATURE_SVG,
     stampImage: DEFAULT_STAMP_SVG,
+    defaultStampImage: DEFAULT_STAMP_SVG,
+    customStampImage: undefined,
+    stampType: 'default',
     showSignature: true,
     showStamp: true,
-    useGeneratedStamp: true,
+    useGeneratedStamp: false,
     stampDetails: {
       title: 'Dra. Laura M. Oliveros Valencia',
       subtitle: 'Dermatología Clínica y Estética',
@@ -167,7 +170,15 @@ export const INITIAL_QUOTE: Quote = {
       code: '9620',
       color: '#475569',
       shape: 'rect'
-    }
+    },
+    layoutMode: 'split',
+    stampPosition: 'beside-right',
+    signatureOffsetX: 0,
+    signatureOffsetY: 0,
+    stampOffsetX: 0,
+    stampOffsetY: 0,
+    stampRotation: 2,
+    stampScale: 1,
   },
   currency: {
     symbol: '¢',

@@ -54,17 +54,32 @@ export interface StampDetails {
   shape: 'rect' | 'round' | 'capsule';
 }
 
+export type StampType = 'default' | 'custom' | 'generated';
+export type SignatureLayoutMode = 'split' | 'center' | 'left' | 'right' | 'free';
+export type StampPositionMode = 'beside-right' | 'beside-left' | 'overlap' | 'free';
+
 export interface SigneeInfo {
   name: string;
   role: string;
   company: string;
   whatsapp: string;
   signatureImage?: string; // base64 / data URL
-  stampImage?: string; // base64 / data URL
+  stampImage?: string; // active stamp image
+  customStampImage?: string; // saved custom uploaded stamp image
+  defaultStampImage?: string; // template default stamp
+  stampType?: StampType; // 'default' | 'custom' | 'generated'
   showSignature: boolean;
   showStamp: boolean;
   useGeneratedStamp: boolean;
   stampDetails: StampDetails;
+  layoutMode?: SignatureLayoutMode; // 'split' | 'center' | 'left' | 'right' | 'free'
+  stampPosition?: StampPositionMode; // 'beside-right' | 'beside-left' | 'overlap' | 'free'
+  signatureOffsetX?: number; // relative offset in px
+  signatureOffsetY?: number; // relative offset in px
+  stampOffsetX?: number; // relative offset in px
+  stampOffsetY?: number; // relative offset in px
+  stampRotation?: number; // degrees (-15 to 15)
+  stampScale?: number; // 0.6 to 1.5
 }
 
 export interface BrandSettings {

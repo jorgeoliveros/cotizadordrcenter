@@ -1,12 +1,32 @@
 import React, { useRef, useState, useEffect } from 'react';
-import { X, PenTool, Upload, Stamp, Check, Trash2 } from 'lucide-react';
-import { SigneeInfo } from '../types';
+import {
+  X,
+  PenTool,
+  Upload,
+  Stamp,
+  Check,
+  Trash2,
+  Move,
+  AlignCenter,
+  AlignLeft,
+  AlignRight,
+  Columns,
+  RotateCw,
+  ZoomIn,
+  RefreshCw,
+  Sparkles,
+  Image as ImageIcon,
+  CheckCircle2,
+} from 'lucide-react';
+import { SigneeInfo, StampType, SignatureLayoutMode, StampPositionMode } from '../types';
+import { DEFAULT_STAMP_SVG, DEFAULT_SIGNATURE_SVG } from '../data/defaultData';
 
 interface SignaturePadModalProps {
   isOpen: boolean;
   onClose: () => void;
   signee: SigneeInfo;
   onUpdateSignee: (signee: SigneeInfo) => void;
+  initialTab?: 'draw' | 'upload-sig' | 'stamp' | 'position';
 }
 
 export const SignaturePadModal: React.FC<SignaturePadModalProps> = ({
@@ -14,18 +34,34 @@ export const SignaturePadModal: React.FC<SignaturePadModalProps> = ({
   onClose,
   signee,
   onUpdateSignee,
+  initialTab = 'stamp',
 }) => {
-  const [activeTab, setActiveTab] = useState<'draw' | 'upload-sig' | 'stamp'>('draw');
+  const [activeTab, setActiveTab] = useState<'draw' | 'upload-sig' | 'stamp' | 'position'>(initialTab);
   const [localSignee, setLocalSignee] = useState<SigneeInfo>(signee);
-  
+
   // Canvas drawing state
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [isDrawing, setIsDrawing] = useState(false);
   const [hasDrawn, setHasDrawn] = useState(false);
 
   useEffect(() => {
-    setLocalSignee(signee);
-  }, [signee, isOpen]);
+    setLocalSignee({
+      ...signee,
+      defaultStampImage: signee.defaultStampImage || DEFAULT_STAMP_SVG,
+      stampType: signee.stampType || (signee.useGeneratedStamp ? 'generated' : signee.customStampImage ? 'custom' : 'default'),
+      layoutMode: signee.layoutMode || 'split',
+      stampPosition: signee.stampPosition || 'beside-right',
+      signatureOffsetX: signee.signatureOffsetX ?? 0,
+      signatureOffsetY: signee.signatureOffsetY ?? 0,
+      stampOffsetX: signee.stampOffsetX ?? 0,
+      stampOffsetY: signee.stampOffsetY ?? 0,
+      stampRotation: signee.stampRotation ?? 2,
+      stampScale: signee.stampScale ?? 1,
+    });
+    if (initialTab) {
+      setActiveTab(initialTab);
+    }
+  }, [signee, isOpen, initialTab]);
 
   // Setup canvas
   useEffect(() => {
@@ -91,7 +127,7 @@ export const SignaturePadModal: React.FC<SignaturePadModalProps> = ({
     const canvas = canvasRef.current;
     if (!canvas) return;
     const signatureDataUrl = canvas.toDataURL('image/png');
-    const updated = {
+    const updated: SigneeInfo = {
       ...localSignee,
       signatureImage: signatureDataUrl,
       showSignature: true,
@@ -106,7 +142,7 @@ export const SignaturePadModal: React.FC<SignaturePadModalProps> = ({
       const reader = new FileReader();
       reader.onload = (event) => {
         const result = event.target?.result as string;
-        const updated = {
+        const updated: SigneeInfo = {
           ...localSignee,
           signatureImage: result,
           showSignature: true,
@@ -118,17 +154,59 @@ export const SignaturePadModal: React.FC<SignaturePadModalProps> = ({
     }
   };
 
+  // Stamp selection handlers
+  const handleSelectDefaultStamp = () => {
+    const defaultImg = localSignee.defaultStampImage || DEFAULT_STAMP_SVG;
+    const updated: SigneeInfo = {
+      ...localSignee,
+      stampType: 'default',
+      stampImage: defaultImg,
+      defaultStampImage: defaultImg,
+      showStamp: true,
+      useGeneratedStamp: false,
+    };
+    setLocalSignee(updated);
+    onUpdateSignee(updated);
+  };
+
+  const handleSelectCustomStamp = () => {
+    if (!localSignee.customStampImage) return;
+    const updated: SigneeInfo = {
+      ...localSignee,
+      stampType: 'custom',
+      stampImage: localSignee.customStampImage,
+      showStamp: true,
+      useGeneratedStamp: false,
+    };
+    setLocalSignee(updated);
+    onUpdateSignee(updated);
+  };
+
+  const handleSelectGeneratedStamp = () => {
+    const updated: SigneeInfo = {
+      ...localSignee,
+      stampType: 'generated',
+      useGeneratedStamp: true,
+      showStamp: true,
+    };
+    setLocalSignee(updated);
+    onUpdateSignee(updated);
+  };
+
   const handleStampUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       const reader = new FileReader();
       reader.onload = (event) => {
         const result = event.target?.result as string;
-        const updated = {
+        const updated: SigneeInfo = {
           ...localSignee,
+          customStampImage: result,
           stampImage: result,
+          stampType: 'custom',
           showStamp: true,
           useGeneratedStamp: false,
+          defaultStampImage: localSignee.defaultStampImage || DEFAULT_STAMP_SVG,
         };
         setLocalSignee(updated);
         onUpdateSignee(updated);
@@ -137,35 +215,109 @@ export const SignaturePadModal: React.FC<SignaturePadModalProps> = ({
     }
   };
 
+  const handleRemoveCustomStamp = () => {
+    const defaultImg = localSignee.defaultStampImage || DEFAULT_STAMP_SVG;
+    const updated: SigneeInfo = {
+      ...localSignee,
+      customStampImage: undefined,
+      stampType: 'default',
+      stampImage: defaultImg,
+      useGeneratedStamp: false,
+    };
+    setLocalSignee(updated);
+    onUpdateSignee(updated);
+  };
+
+  // Layout handlers
+  const handleSetLayoutMode = (mode: SignatureLayoutMode) => {
+    const updated: SigneeInfo = {
+      ...localSignee,
+      layoutMode: mode,
+    };
+    setLocalSignee(updated);
+    onUpdateSignee(updated);
+  };
+
+  const handleResetPositions = () => {
+    const updated: SigneeInfo = {
+      ...localSignee,
+      signatureOffsetX: 0,
+      signatureOffsetY: 0,
+      stampOffsetX: 0,
+      stampOffsetY: 0,
+      stampRotation: 2,
+      stampScale: 1,
+    };
+    setLocalSignee(updated);
+    onUpdateSignee(updated);
+  };
+
   const handleSaveAndClose = () => {
     onUpdateSignee(localSignee);
     onClose();
   };
 
+  const currentStampType: StampType =
+    localSignee.stampType ||
+    (localSignee.useGeneratedStamp
+      ? 'generated'
+      : localSignee.customStampImage && localSignee.stampImage === localSignee.customStampImage
+      ? 'custom'
+      : 'default');
+
   return (
-    <div className="fixed inset-0 z-50 bg-stone-900/60 backdrop-blur-xs flex items-center justify-center p-4">
-      <div className="bg-white rounded-xl shadow-2xl max-w-lg w-full overflow-hidden border border-stone-200">
+    <div className="fixed inset-0 z-50 bg-stone-900/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4">
+      <div className="bg-white rounded-2xl shadow-2xl max-w-xl w-full overflow-hidden border border-stone-200 flex flex-col max-h-[90vh]">
         {/* Modal Header */}
-        <div className="flex justify-between items-center px-6 py-4 border-b border-stone-200 bg-stone-50">
-          <div className="flex items-center gap-2">
-            <Stamp className="w-5 h-5 text-stone-700" />
-            <h3 className="text-base font-bold text-stone-900">
-              Firma y Sello Digital Profesional
-            </h3>
+        <div className="flex justify-between items-center px-6 py-4 border-b border-stone-200 bg-stone-50 shrink-0">
+          <div className="flex items-center gap-2.5">
+            <div className="p-2 bg-stone-900 text-white rounded-lg">
+              <Stamp className="w-4 h-4" />
+            </div>
+            <div>
+              <h3 className="text-sm sm:text-base font-bold text-stone-900 leading-tight">
+                Firma, Sello & Ubicación
+              </h3>
+              <p className="text-[11px] text-stone-500">
+                Personaliza la firma, escoge tu sello y ajusta su posición libremente.
+              </p>
+            </div>
           </div>
           <button
             onClick={onClose}
-            className="text-stone-400 hover:text-stone-700 p-1 rounded-lg hover:bg-stone-200/60 transition-colors"
+            className="text-stone-400 hover:text-stone-700 p-1.5 rounded-lg hover:bg-stone-200/60 transition-colors"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
         {/* Tabs */}
-        <div className="flex border-b border-stone-200 px-6 pt-3 bg-white gap-4 text-xs font-semibold">
+        <div className="flex border-b border-stone-200 px-4 sm:px-6 pt-2 bg-stone-50/50 gap-2 sm:gap-4 text-xs font-semibold overflow-x-auto shrink-0">
+          <button
+            onClick={() => setActiveTab('stamp')}
+            className={`pb-2.5 px-1 border-b-2 flex items-center gap-1.5 transition-colors whitespace-nowrap ${
+              activeTab === 'stamp'
+                ? 'border-stone-900 text-stone-900'
+                : 'border-transparent text-stone-500 hover:text-stone-700'
+            }`}
+          >
+            <Stamp className="w-3.5 h-3.5" />
+            Sello Profesional
+          </button>
+          <button
+            onClick={() => setActiveTab('position')}
+            className={`pb-2.5 px-1 border-b-2 flex items-center gap-1.5 transition-colors whitespace-nowrap ${
+              activeTab === 'position'
+                ? 'border-stone-900 text-stone-900'
+                : 'border-transparent text-stone-500 hover:text-stone-700'
+            }`}
+          >
+            <Move className="w-3.5 h-3.5" />
+            Ubicación & Alineación
+          </button>
           <button
             onClick={() => setActiveTab('draw')}
-            className={`pb-3 border-b-2 flex items-center gap-1.5 transition-colors ${
+            className={`pb-2.5 px-1 border-b-2 flex items-center gap-1.5 transition-colors whitespace-nowrap ${
               activeTab === 'draw'
                 ? 'border-stone-900 text-stone-900'
                 : 'border-transparent text-stone-500 hover:text-stone-700'
@@ -176,42 +328,661 @@ export const SignaturePadModal: React.FC<SignaturePadModalProps> = ({
           </button>
           <button
             onClick={() => setActiveTab('upload-sig')}
-            className={`pb-3 border-b-2 flex items-center gap-1.5 transition-colors ${
+            className={`pb-2.5 px-1 border-b-2 flex items-center gap-1.5 transition-colors whitespace-nowrap ${
               activeTab === 'upload-sig'
                 ? 'border-stone-900 text-stone-900'
                 : 'border-transparent text-stone-500 hover:text-stone-700'
             }`}
           >
             <Upload className="w-3.5 h-3.5" />
-            Subir Imagen de Firma
-          </button>
-          <button
-            onClick={() => setActiveTab('stamp')}
-            className={`pb-3 border-b-2 flex items-center gap-1.5 transition-colors ${
-              activeTab === 'stamp'
-                ? 'border-stone-900 text-stone-900'
-                : 'border-transparent text-stone-500 hover:text-stone-700'
-            }`}
-          >
-            <Stamp className="w-3.5 h-3.5" />
-            Sello Profesional
+            Subir Firma
           </button>
         </div>
 
         {/* Tab Contents */}
-        <div className="p-6 space-y-4 max-h-[70vh] overflow-y-auto">
-          {/* Tab 1: Draw Signature */}
+        <div className="p-4 sm:p-6 space-y-5 overflow-y-auto flex-1">
+          {/* ========================================================================= */}
+          {/* TAB 1: SELLO PROFESIONAL                                                  */}
+          {/* ========================================================================= */}
+          {activeTab === 'stamp' && (
+            <div className="space-y-4">
+              <div className="flex items-center justify-between pb-3 border-b border-stone-200">
+                <label className="text-xs font-bold text-stone-900 flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={localSignee.showStamp}
+                    onChange={(e) => {
+                      const updated = { ...localSignee, showStamp: e.target.checked };
+                      setLocalSignee(updated);
+                      onUpdateSignee(updated);
+                    }}
+                    className="w-4 h-4 rounded border-stone-300 text-stone-900 focus:ring-stone-500 cursor-pointer"
+                  />
+                  Mostrar sello oficial en el documento
+                </label>
+                <span className="text-[11px] text-stone-500">
+                  {localSignee.showStamp ? 'Visible en cotización' : 'Oculto'}
+                </span>
+              </div>
+
+              <div className="bg-amber-50/70 border border-amber-200 rounded-xl p-3 text-xs text-amber-950 flex items-start gap-2">
+                <Sparkles className="w-4 h-4 text-amber-700 shrink-0 mt-0.5" />
+                <p>
+                  <strong>Selector de Sello:</strong> Puedes elegir entre el sello oficial de la plantilla, tu propia imagen personalizada, o un sello vectorial. Puedes cambiar entre ellos cuando quieras sin perder ninguno.
+                </p>
+              </div>
+
+              {/* Selector de opciones de sello */}
+              <div className="space-y-3">
+                {/* 1. SELLO POR DEFECTO DE LA PLANTILLA */}
+                <div
+                  onClick={handleSelectDefaultStamp}
+                  className={`p-3.5 rounded-xl border-2 transition-all cursor-pointer ${
+                    currentStampType === 'default'
+                      ? 'border-stone-900 bg-stone-50/60 shadow-xs'
+                      : 'border-stone-200 hover:border-stone-300 bg-white'
+                  }`}
+                >
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-2">
+                      <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${
+                        currentStampType === 'default'
+                          ? 'border-stone-900 bg-stone-900 text-white'
+                          : 'border-stone-300'
+                      }`}>
+                        {currentStampType === 'default' && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
+                      </div>
+                      <span className="text-xs font-bold text-stone-900">
+                        Sello por Defecto de la Plantilla
+                      </span>
+                      <span className="px-1.5 py-0.5 text-[10px] font-semibold bg-stone-200 text-stone-700 rounded">
+                        Oficial
+                      </span>
+                    </div>
+
+                    {currentStampType === 'default' ? (
+                      <span className="text-[11px] font-bold text-emerald-700 flex items-center gap-1">
+                        <CheckCircle2 className="w-3.5 h-3.5" />
+                        Activo
+                      </span>
+                    ) : (
+                      <span className="text-[11px] font-medium text-stone-500 hover:text-stone-900">
+                        Hacer clic para activar
+                      </span>
+                    )}
+                  </div>
+
+                  <p className="text-[11px] text-stone-600 mb-2.5">
+                    Sello médico oficial de la plantilla Vitapiel (Dra. Laura M. Oliveros Valencia, Cód. 9620).
+                  </p>
+
+                  <div className="bg-white border border-stone-200 rounded-lg p-2.5 flex items-center justify-center h-20 max-w-xs mx-auto">
+                    <img
+                      src={localSignee.defaultStampImage || DEFAULT_STAMP_SVG}
+                      alt="Sello por defecto"
+                      className="max-h-full max-w-full object-contain filter contrast-105"
+                    />
+                  </div>
+                </div>
+
+                {/* 2. MI IMAGEN DE SELLO PERSONALIZADO */}
+                <div
+                  className={`p-3.5 rounded-xl border-2 transition-all ${
+                    currentStampType === 'custom'
+                      ? 'border-stone-900 bg-stone-50/60 shadow-xs'
+                      : 'border-stone-200 bg-white'
+                  }`}
+                >
+                  <div className="flex items-center justify-between mb-2">
+                    <div
+                      onClick={() => {
+                        if (localSignee.customStampImage) {
+                          handleSelectCustomStamp();
+                        }
+                      }}
+                      className="flex items-center gap-2 cursor-pointer"
+                    >
+                      <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${
+                        currentStampType === 'custom'
+                          ? 'border-stone-900 bg-stone-900 text-white'
+                          : 'border-stone-300'
+                      }`}>
+                        {currentStampType === 'custom' && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
+                      </div>
+                      <span className="text-xs font-bold text-stone-900">
+                        Mi Sello Personalizado (Imagen propia)
+                      </span>
+                    </div>
+
+                    {currentStampType === 'custom' ? (
+                      <span className="text-[11px] font-bold text-emerald-700 flex items-center gap-1">
+                        <CheckCircle2 className="w-3.5 h-3.5" />
+                        Activo
+                      </span>
+                    ) : localSignee.customStampImage ? (
+                      <button
+                        type="button"
+                        onClick={handleSelectCustomStamp}
+                        className="text-[11px] font-semibold text-stone-700 hover:text-stone-900 underline"
+                      >
+                        Activar este sello
+                      </button>
+                    ) : null}
+                  </div>
+
+                  <p className="text-[11px] text-stone-600 mb-2.5">
+                    Sube una foto o escaneo de tu sello físico (formato PNG con fondo transparente o JPG claro).
+                  </p>
+
+                  {localSignee.customStampImage ? (
+                    <div className="space-y-2.5">
+                      <div className="bg-white border border-stone-200 rounded-lg p-2 flex items-center justify-center h-20 max-w-xs mx-auto relative group">
+                        <img
+                          src={localSignee.customStampImage}
+                          alt="Sello personalizado"
+                          className="max-h-full max-w-full object-contain"
+                        />
+                      </div>
+
+                      <div className="flex items-center justify-between pt-1">
+                        <label className="text-[11px] font-semibold text-stone-800 bg-stone-100 hover:bg-stone-200 px-2.5 py-1 rounded-md cursor-pointer transition-colors border border-stone-200 flex items-center gap-1">
+                          <Upload className="w-3 h-3 text-stone-600" />
+                          Cambiar imagen...
+                          <input
+                            type="file"
+                            accept="image/*"
+                            onChange={handleStampUpload}
+                            className="hidden"
+                          />
+                        </label>
+
+                        <button
+                          type="button"
+                          onClick={handleRemoveCustomStamp}
+                          className="text-[11px] text-red-600 hover:text-red-700 font-medium flex items-center gap-1"
+                        >
+                          <Trash2 className="w-3 h-3" />
+                          Eliminar mi imagen
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <label className="border-2 border-dashed border-stone-300 hover:border-stone-500 rounded-xl p-4 flex flex-col items-center justify-center cursor-pointer bg-stone-50/50 hover:bg-stone-100/50 transition-colors">
+                      <Upload className="w-6 h-6 text-stone-400 mb-1" />
+                      <span className="text-xs font-semibold text-stone-800">
+                        Hacer clic para subir imagen de tu sello
+                      </span>
+                      <span className="text-[10px] text-stone-500 mt-0.5">
+                        PNG, JPG o SVG (fondo transparente recomendado)
+                      </span>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleStampUpload}
+                        className="hidden"
+                      />
+                    </label>
+                  )}
+                </div>
+
+                {/* 3. SELLO DIGITAL GENERADO CON DATOS */}
+                <div
+                  className={`p-3.5 rounded-xl border-2 transition-all ${
+                    currentStampType === 'generated'
+                      ? 'border-stone-900 bg-stone-50/60 shadow-xs'
+                      : 'border-stone-200 bg-white'
+                  }`}
+                >
+                  <div className="flex items-center justify-between mb-2">
+                    <div
+                      onClick={handleSelectGeneratedStamp}
+                      className="flex items-center gap-2 cursor-pointer"
+                    >
+                      <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${
+                        currentStampType === 'generated'
+                          ? 'border-stone-900 bg-stone-900 text-white'
+                          : 'border-stone-300'
+                      }`}>
+                        {currentStampType === 'generated' && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
+                      </div>
+                      <span className="text-xs font-bold text-stone-900">
+                        Sello Digital con Datos Editables (Vector)
+                      </span>
+                    </div>
+
+                    {currentStampType === 'generated' ? (
+                      <span className="text-[11px] font-bold text-emerald-700 flex items-center gap-1">
+                        <CheckCircle2 className="w-3.5 h-3.5" />
+                        Activo
+                      </span>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={handleSelectGeneratedStamp}
+                        className="text-[11px] font-semibold text-stone-700 hover:text-stone-900 underline"
+                      >
+                        Activar este sello
+                      </button>
+                    )}
+                  </div>
+
+                  <p className="text-[11px] text-stone-600 mb-2.5">
+                    Genera una estampa rectangular médica dinámica con los datos que ingreses abajo.
+                  </p>
+
+                  <div className="space-y-2.5 pt-1">
+                    <div>
+                      <label className="block text-[10px] font-semibold uppercase text-stone-600 mb-0.5">
+                        Nombre en el Sello
+                      </label>
+                      <input
+                        type="text"
+                        value={localSignee.stampDetails.title}
+                        onChange={(e) => {
+                          const updated = {
+                            ...localSignee,
+                            stampDetails: { ...localSignee.stampDetails, title: e.target.value },
+                          };
+                          setLocalSignee(updated);
+                          onUpdateSignee(updated);
+                        }}
+                        className="w-full px-2.5 py-1 text-xs rounded border border-stone-300 bg-white"
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <label className="block text-[10px] font-semibold uppercase text-stone-600 mb-0.5">
+                          Especialidad
+                        </label>
+                        <input
+                          type="text"
+                          value={localSignee.stampDetails.subtitle}
+                          onChange={(e) => {
+                            const updated = {
+                              ...localSignee,
+                              stampDetails: { ...localSignee.stampDetails, subtitle: e.target.value },
+                            };
+                            setLocalSignee(updated);
+                            onUpdateSignee(updated);
+                          }}
+                          className="w-full px-2.5 py-1 text-xs rounded border border-stone-300 bg-white"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[10px] font-semibold uppercase text-stone-600 mb-0.5">
+                          Código / Carné
+                        </label>
+                        <input
+                          type="text"
+                          value={localSignee.stampDetails.code}
+                          onChange={(e) => {
+                            const updated = {
+                              ...localSignee,
+                              stampDetails: { ...localSignee.stampDetails, code: e.target.value },
+                            };
+                            setLocalSignee(updated);
+                            onUpdateSignee(updated);
+                          }}
+                          className="w-full px-2.5 py-1 text-xs rounded border border-stone-300 bg-white"
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-[10px] font-semibold uppercase text-stone-600 mb-0.5">
+                        Texto Adicional
+                      </label>
+                      <input
+                        type="text"
+                        value={localSignee.stampDetails.extraText}
+                        onChange={(e) => {
+                          const updated = {
+                            ...localSignee,
+                            stampDetails: { ...localSignee.stampDetails, extraText: e.target.value },
+                          };
+                          setLocalSignee(updated);
+                          onUpdateSignee(updated);
+                        }}
+                        className="w-full px-2.5 py-1 text-xs rounded border border-stone-300 bg-white"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-[10px] font-semibold uppercase text-stone-600 mb-1">
+                        Color de Tinta
+                      </label>
+                      <div className="flex flex-wrap gap-2">
+                        {[
+                          { label: 'Azul', val: '#1e3a8a' },
+                          { label: 'Grafito', val: '#475569' },
+                          { label: 'Verde', val: '#047857' },
+                          { label: 'Borgoña', val: '#881337' },
+                        ].map((c) => (
+                          <button
+                            key={c.val}
+                            type="button"
+                            onClick={() => {
+                              const updated = {
+                                ...localSignee,
+                                stampDetails: { ...localSignee.stampDetails, color: c.val },
+                              };
+                              setLocalSignee(updated);
+                              onUpdateSignee(updated);
+                            }}
+                            className={`px-2 py-0.5 text-xs rounded border flex items-center gap-1.5 ${
+                              localSignee.stampDetails.color === c.val
+                                ? 'border-stone-900 font-bold bg-stone-100'
+                                : 'border-stone-200'
+                            }`}
+                          >
+                            <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: c.val }} />
+                            {c.label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* ========================================================================= */}
+          {/* TAB 2: UBICACIÓN & ALINEACIÓN (CENTRADO, DISTRIBUIDO, LIBRE)               */}
+          {/* ========================================================================= */}
+          {activeTab === 'position' && (
+            <div className="space-y-4">
+              <div>
+                <h4 className="text-xs font-bold uppercase tracking-wider text-stone-900 mb-1">
+                  Alineación y Ubicación en el Documento
+                </h4>
+                <p className="text-xs text-stone-600">
+                  Escoge cómo deseas que se distribuyan la firma y el sello al pie de la cotización:
+                </p>
+              </div>
+
+              {/* Botones de Alineación Principal */}
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                {[
+                  {
+                    id: 'center' as SignatureLayoutMode,
+                    label: 'Centrado',
+                    desc: 'Firma y sello centrados',
+                    icon: AlignCenter,
+                  },
+                  {
+                    id: 'split' as SignatureLayoutMode,
+                    label: 'Estándar',
+                    desc: 'Firma izq, Sello der',
+                    icon: Columns,
+                  },
+                  {
+                    id: 'left' as SignatureLayoutMode,
+                    label: 'A la Izquierda',
+                    desc: 'Todo a la izquierda',
+                    icon: AlignLeft,
+                  },
+                  {
+                    id: 'right' as SignatureLayoutMode,
+                    label: 'A la Derecha',
+                    desc: 'Todo a la derecha',
+                    icon: AlignRight,
+                  },
+                  {
+                    id: 'free' as SignatureLayoutMode,
+                    label: 'Ubicación Libre',
+                    desc: 'Sin límites de posición',
+                    icon: Move,
+                  },
+                ].map((item) => {
+                  const Icon = item.icon;
+                  const isSelected = (localSignee.layoutMode || 'split') === item.id;
+                  return (
+                    <button
+                      key={item.id}
+                      type="button"
+                      onClick={() => handleSetLayoutMode(item.id)}
+                      className={`p-3 rounded-xl border-2 text-left transition-all ${
+                        isSelected
+                          ? 'border-stone-900 bg-stone-900 text-white shadow-xs'
+                          : 'border-stone-200 hover:border-stone-300 bg-white text-stone-800'
+                      }`}
+                    >
+                      <div className="flex items-center gap-1.5 mb-1">
+                        <Icon className="w-4 h-4" />
+                        <span className="text-xs font-bold">{item.label}</span>
+                      </div>
+                      <span className={`text-[10px] block ${isSelected ? 'text-stone-300' : 'text-stone-500'}`}>
+                        {item.desc}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Posición Relativa del Sello */}
+              <div className="p-3.5 bg-stone-50 border border-stone-200 rounded-xl space-y-2">
+                <label className="block text-xs font-bold text-stone-800">
+                  Posición del Sello respecto a la Firma:
+                </label>
+                <div className="grid grid-cols-3 gap-2">
+                  {[
+                    { id: 'beside-right' as StampPositionMode, label: 'Al lado derecho' },
+                    { id: 'beside-left' as StampPositionMode, label: 'Al lado izquierdo' },
+                    { id: 'overlap' as StampPositionMode, label: 'Superpuesto (Sobre la firma)' },
+                  ].map((pos) => {
+                    const isSelected = (localSignee.stampPosition || 'beside-right') === pos.id;
+                    return (
+                      <button
+                        key={pos.id}
+                        type="button"
+                        onClick={() => {
+                          const updated = { ...localSignee, stampPosition: pos.id };
+                          setLocalSignee(updated);
+                          onUpdateSignee(updated);
+                        }}
+                        className={`px-2.5 py-1.5 rounded-lg text-xs font-medium border transition-colors ${
+                          isSelected
+                            ? 'bg-stone-900 text-white border-stone-900 font-bold'
+                            : 'bg-white text-stone-700 border-stone-200 hover:bg-stone-100'
+                        }`}
+                      >
+                        {pos.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Ajustes de Desplazamiento Libre y Fino */}
+              <div className="p-3.5 bg-stone-50 border border-stone-200 rounded-xl space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-stone-900 flex items-center gap-1.5">
+                    <Move className="w-3.5 h-3.5 text-stone-600" />
+                    Controles de Posición Libre (Offsets en px)
+                  </span>
+                  <button
+                    type="button"
+                    onClick={handleResetPositions}
+                    className="text-[11px] text-stone-600 hover:text-stone-900 flex items-center gap-1 underline font-medium"
+                  >
+                    <RefreshCw className="w-3 h-3" />
+                    Restablecer posiciones
+                  </button>
+                </div>
+
+                {/* Offset Firma */}
+                <div className="grid grid-cols-2 gap-3 pt-1 border-t border-stone-200">
+                  <div>
+                    <div className="flex justify-between text-[11px] text-stone-600 mb-1">
+                      <span>Firma Horiz. (X)</span>
+                      <span className="font-semibold">{localSignee.signatureOffsetX ?? 0}px</span>
+                    </div>
+                    <input
+                      type="range"
+                      min="-160"
+                      max="160"
+                      step="2"
+                      value={localSignee.signatureOffsetX ?? 0}
+                      onChange={(e) => {
+                        const val = parseInt(e.target.value, 10);
+                        const updated = { ...localSignee, signatureOffsetX: val };
+                        setLocalSignee(updated);
+                        onUpdateSignee(updated);
+                      }}
+                      className="w-full accent-stone-900 cursor-pointer"
+                    />
+                  </div>
+                  <div>
+                    <div className="flex justify-between text-[11px] text-stone-600 mb-1">
+                      <span>Firma Vert. (Y)</span>
+                      <span className="font-semibold">{localSignee.signatureOffsetY ?? 0}px</span>
+                    </div>
+                    <input
+                      type="range"
+                      min="-60"
+                      max="60"
+                      step="2"
+                      value={localSignee.signatureOffsetY ?? 0}
+                      onChange={(e) => {
+                        const val = parseInt(e.target.value, 10);
+                        const updated = { ...localSignee, signatureOffsetY: val };
+                        setLocalSignee(updated);
+                        onUpdateSignee(updated);
+                      }}
+                      className="w-full accent-stone-900 cursor-pointer"
+                    />
+                  </div>
+                </div>
+
+                {/* Offset Sello */}
+                <div className="grid grid-cols-2 gap-3 pt-2 border-t border-stone-200">
+                  <div>
+                    <div className="flex justify-between text-[11px] text-stone-600 mb-1">
+                      <span>Sello Horiz. (X)</span>
+                      <span className="font-semibold">{localSignee.stampOffsetX ?? 0}px</span>
+                    </div>
+                    <input
+                      type="range"
+                      min="-200"
+                      max="200"
+                      step="2"
+                      value={localSignee.stampOffsetX ?? 0}
+                      onChange={(e) => {
+                        const val = parseInt(e.target.value, 10);
+                        const updated = { ...localSignee, stampOffsetX: val };
+                        setLocalSignee(updated);
+                        onUpdateSignee(updated);
+                      }}
+                      className="w-full accent-stone-900 cursor-pointer"
+                    />
+                  </div>
+                  <div>
+                    <div className="flex justify-between text-[11px] text-stone-600 mb-1">
+                      <span>Sello Vert. (Y)</span>
+                      <span className="font-semibold">{localSignee.stampOffsetY ?? 0}px</span>
+                    </div>
+                    <input
+                      type="range"
+                      min="-90"
+                      max="90"
+                      step="2"
+                      value={localSignee.stampOffsetY ?? 0}
+                      onChange={(e) => {
+                        const val = parseInt(e.target.value, 10);
+                        const updated = { ...localSignee, stampOffsetY: val };
+                        setLocalSignee(updated);
+                        onUpdateSignee(updated);
+                      }}
+                      className="w-full accent-stone-900 cursor-pointer"
+                    />
+                  </div>
+                </div>
+
+                {/* Rotación y Escala Sello */}
+                <div className="grid grid-cols-2 gap-3 pt-2 border-t border-stone-200">
+                  <div>
+                    <div className="flex justify-between text-[11px] text-stone-600 mb-1">
+                      <span className="flex items-center gap-1">
+                        <RotateCw className="w-3 h-3" />
+                        Inclinación Sello
+                      </span>
+                      <span className="font-semibold">{localSignee.stampRotation ?? 2}°</span>
+                    </div>
+                    <input
+                      type="range"
+                      min="-15"
+                      max="15"
+                      step="1"
+                      value={localSignee.stampRotation ?? 2}
+                      onChange={(e) => {
+                        const val = parseInt(e.target.value, 10);
+                        const updated = { ...localSignee, stampRotation: val };
+                        setLocalSignee(updated);
+                        onUpdateSignee(updated);
+                      }}
+                      className="w-full accent-stone-900 cursor-pointer"
+                    />
+                  </div>
+                  <div>
+                    <div className="flex justify-between text-[11px] text-stone-600 mb-1">
+                      <span className="flex items-center gap-1">
+                        <ZoomIn className="w-3 h-3" />
+                        Tamaño Sello
+                      </span>
+                      <span className="font-semibold">{Math.round((localSignee.stampScale ?? 1) * 100)}%</span>
+                    </div>
+                    <input
+                      type="range"
+                      min="0.6"
+                      max="1.4"
+                      step="0.05"
+                      value={localSignee.stampScale ?? 1}
+                      onChange={(e) => {
+                        const val = parseFloat(e.target.value);
+                        const updated = { ...localSignee, stampScale: val };
+                        setLocalSignee(updated);
+                        onUpdateSignee(updated);
+                      }}
+                      className="w-full accent-stone-900 cursor-pointer"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* ========================================================================= */}
+          {/* TAB 3: DIBUJAR FIRMA                                                      */}
+          {/* ========================================================================= */}
           {activeTab === 'draw' && (
             <div className="space-y-4">
-              <p className="text-xs text-stone-600">
-                Firme con el mouse o con el dedo sobre el lienzo para estampar su rúbrica digital:
-              </p>
-              <div className="border border-stone-300 rounded-lg p-2 bg-stone-50/70 relative">
+              <div className="flex items-center justify-between">
+                <p className="text-xs text-stone-600">
+                  Firme con el mouse o con el dedo sobre el lienzo para estampar su rúbrica digital:
+                </p>
+                <label className="text-xs font-semibold text-stone-800 flex items-center gap-1.5 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={localSignee.showSignature}
+                    onChange={(e) => {
+                      const updated = { ...localSignee, showSignature: e.target.checked };
+                      setLocalSignee(updated);
+                      onUpdateSignee(updated);
+                    }}
+                    className="w-3.5 h-3.5 rounded border-stone-300 text-stone-900"
+                  />
+                  Mostrar firma
+                </label>
+              </div>
+
+              <div className="border border-stone-300 rounded-xl p-3 bg-stone-50/70 relative">
                 <canvas
                   ref={canvasRef}
-                  width={440}
+                  width={460}
                   height={150}
-                  className="w-full h-36 bg-white rounded border border-stone-200 cursor-crosshair touch-none"
+                  className="w-full h-36 bg-white rounded-lg border border-stone-200 cursor-crosshair touch-none"
                   onMouseDown={startDrawing}
                   onMouseMove={draw}
                   onMouseUp={stopDrawing}
@@ -220,20 +991,20 @@ export const SignaturePadModal: React.FC<SignaturePadModalProps> = ({
                   onTouchMove={draw}
                   onTouchEnd={stopDrawing}
                 />
-                <div className="flex justify-between items-center mt-2 px-1">
+                <div className="flex justify-between items-center mt-2.5 px-1">
                   <button
                     type="button"
                     onClick={clearCanvas}
                     className="text-xs text-red-600 hover:text-red-700 font-medium flex items-center gap-1"
                   >
-                    <Trash2 className="w-3 h-3" />
+                    <Trash2 className="w-3.5 h-3.5" />
                     Borrar lienzo
                   </button>
                   <button
                     type="button"
                     onClick={saveDrawnSignature}
                     disabled={!hasDrawn}
-                    className="px-3 py-1.5 bg-stone-900 text-white rounded text-xs font-medium hover:bg-stone-800 disabled:opacity-40 transition-opacity flex items-center gap-1"
+                    className="px-3.5 py-1.5 bg-stone-900 text-white rounded-lg text-xs font-semibold hover:bg-stone-800 disabled:opacity-40 transition-opacity flex items-center gap-1.5"
                   >
                     <Check className="w-3.5 h-3.5" />
                     Aplicar Firma Dibujada
@@ -243,12 +1014,30 @@ export const SignaturePadModal: React.FC<SignaturePadModalProps> = ({
             </div>
           )}
 
-          {/* Tab 2: Upload Signature */}
+          {/* ========================================================================= */}
+          {/* TAB 4: SUBIR IMAGEN DE FIRMA                                              */}
+          {/* ========================================================================= */}
           {activeTab === 'upload-sig' && (
             <div className="space-y-4">
-              <p className="text-xs text-stone-600">
-                Suba una imagen nítida de su firma manuscrita (formato PNG transparente o JPG fondo claro):
-              </p>
+              <div className="flex items-center justify-between">
+                <p className="text-xs text-stone-600">
+                  Suba una imagen nítida de su firma manuscrita:
+                </p>
+                <label className="text-xs font-semibold text-stone-800 flex items-center gap-1.5 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={localSignee.showSignature}
+                    onChange={(e) => {
+                      const updated = { ...localSignee, showSignature: e.target.checked };
+                      setLocalSignee(updated);
+                      onUpdateSignee(updated);
+                    }}
+                    className="w-3.5 h-3.5 rounded border-stone-300 text-stone-900"
+                  />
+                  Mostrar firma
+                </label>
+              </div>
+
               <label className="border-2 border-dashed border-stone-300 rounded-xl p-6 flex flex-col items-center justify-center cursor-pointer hover:border-stone-500 bg-stone-50 transition-colors">
                 <Upload className="w-8 h-8 text-stone-400 mb-2" />
                 <span className="text-xs font-semibold text-stone-800">
@@ -282,216 +1071,62 @@ export const SignaturePadModal: React.FC<SignaturePadModalProps> = ({
             </div>
           )}
 
-          {/* Tab 3: Official Stamp */}
-          {activeTab === 'stamp' && (
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <label className="text-xs font-semibold text-stone-800 flex items-center gap-2">
-                  <input
-                    type="checkbox"
-                    checked={localSignee.showStamp}
-                    onChange={(e) =>
-                      setLocalSignee({
-                        ...localSignee,
-                        showStamp: e.target.checked,
-                      })
-                    }
-                    className="rounded border-stone-300 text-stone-900 focus:ring-stone-500"
-                  />
-                  Mostrar sello oficial en el documento
-                </label>
-              </div>
-
-              {/* Stamp customization fields */}
-              <div className="p-4 bg-stone-50 border border-stone-200 rounded-lg space-y-3">
-                <h4 className="text-xs font-bold uppercase tracking-wider text-stone-700">
-                  Configurar Sello Digital Profesional
-                </h4>
-
-                <div>
-                  <label className="block text-[11px] font-medium text-stone-600 mb-1">
-                    Nombre del Profesional / Empresa
-                  </label>
-                  <input
-                    type="text"
-                    value={localSignee.stampDetails.title}
-                    onChange={(e) =>
-                      setLocalSignee({
-                        ...localSignee,
-                        stampDetails: {
-                          ...localSignee.stampDetails,
-                          title: e.target.value,
-                        },
-                      })
-                    }
-                    className="w-full px-2.5 py-1.5 text-xs rounded border border-stone-300 bg-white"
-                  />
-                </div>
-
-                <div className="grid grid-cols-2 gap-2">
-                  <div>
-                    <label className="block text-[11px] font-medium text-stone-600 mb-1">
-                      Especialidad / Subtítulo
-                    </label>
-                    <input
-                      type="text"
-                      value={localSignee.stampDetails.subtitle}
-                      onChange={(e) =>
-                        setLocalSignee({
-                          ...localSignee,
-                          stampDetails: {
-                            ...localSignee.stampDetails,
-                            subtitle: e.target.value,
-                          },
-                        })
-                      }
-                      className="w-full px-2.5 py-1.5 text-xs rounded border border-stone-300 bg-white"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-[11px] font-medium text-stone-600 mb-1">
-                      Código / Registro Médico o Profesional
-                    </label>
-                    <input
-                      type="text"
-                      value={localSignee.stampDetails.code}
-                      onChange={(e) =>
-                        setLocalSignee({
-                          ...localSignee,
-                          stampDetails: {
-                            ...localSignee.stampDetails,
-                            code: e.target.value,
-                          },
-                        })
-                      }
-                      className="w-full px-2.5 py-1.5 text-xs rounded border border-stone-300 bg-white"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-[11px] font-medium text-stone-600 mb-1">
-                    Texto adicional (ej. Atención Adultos y Niños)
-                  </label>
-                  <input
-                    type="text"
-                    value={localSignee.stampDetails.extraText}
-                    onChange={(e) =>
-                      setLocalSignee({
-                        ...localSignee,
-                        stampDetails: {
-                          ...localSignee.stampDetails,
-                          extraText: e.target.value,
-                        },
-                      })
-                    }
-                    className="w-full px-2.5 py-1.5 text-xs rounded border border-stone-300 bg-white"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-[11px] font-medium text-stone-600 mb-1">
-                    Tinta del sello
-                  </label>
-                  <div className="flex gap-2 items-center">
-                    {[
-                      { label: 'Azul Clínico', val: '#1e3a8a' },
-                      { label: 'Gris Grafito', val: '#475569' },
-                      { label: 'Verde Esmeralda', val: '#047857' },
-                      { label: 'Borgoña', val: '#881337' },
-                    ].map((col) => (
-                      <button
-                        key={col.val}
-                        type="button"
-                        onClick={() =>
-                          setLocalSignee({
-                            ...localSignee,
-                            stampDetails: {
-                              ...localSignee.stampDetails,
-                              color: col.val,
-                            },
-                          })
-                        }
-                        className={`px-2.5 py-1 text-[11px] rounded border flex items-center gap-1.5 ${
-                          localSignee.stampDetails.color === col.val
-                            ? 'border-stone-900 bg-white font-bold'
-                            : 'border-stone-200 bg-stone-100'
-                        }`}
-                      >
-                        <span
-                          className="w-2.5 h-2.5 rounded-full"
-                          style={{ backgroundColor: col.val }}
-                        />
-                        {col.label}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Or upload custom stamp image */}
-                <div className="pt-2 border-t border-stone-200">
-                  <label className="block text-[11px] font-medium text-stone-600 mb-1">
-                    O subir imagen de sello real personalizado:
-                  </label>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={handleStampUpload}
-                    className="text-xs file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-stone-200 file:text-stone-700 hover:file:bg-stone-300 cursor-pointer"
-                  />
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Signee Metadata Form */}
-          <div className="pt-2 border-t border-stone-200 space-y-2">
-            <h4 className="text-xs font-semibold text-stone-700">
+          {/* DATOS DEL FIRMANTE (Común al pie del modal) */}
+          <div className="pt-3 border-t border-stone-200 space-y-2">
+            <h4 className="text-xs font-bold uppercase tracking-wider text-stone-800">
               Datos del Firmante al pie de página:
             </h4>
-            <div className="grid grid-cols-2 gap-2 text-xs">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
               <div>
-                <label className="text-[11px] text-stone-500">Nombre</label>
+                <label className="text-[11px] text-stone-500 font-medium">Nombre</label>
                 <input
                   type="text"
                   value={localSignee.name}
-                  onChange={(e) =>
-                    setLocalSignee({ ...localSignee, name: e.target.value })
-                  }
-                  className="w-full px-2 py-1 rounded border border-stone-300 bg-stone-50 text-xs"
+                  onChange={(e) => {
+                    const updated = { ...localSignee, name: e.target.value };
+                    setLocalSignee(updated);
+                    onUpdateSignee(updated);
+                  }}
+                  className="w-full px-2.5 py-1.5 rounded-lg border border-stone-300 bg-stone-50 text-xs font-medium"
                 />
               </div>
               <div>
-                <label className="text-[11px] text-stone-500">Cargo / Rol</label>
+                <label className="text-[11px] text-stone-500 font-medium">Cargo / Rol</label>
                 <input
                   type="text"
                   value={localSignee.role}
-                  onChange={(e) =>
-                    setLocalSignee({ ...localSignee, role: e.target.value })
-                  }
-                  className="w-full px-2 py-1 rounded border border-stone-300 bg-stone-50 text-xs"
+                  onChange={(e) => {
+                    const updated = { ...localSignee, role: e.target.value };
+                    setLocalSignee(updated);
+                    onUpdateSignee(updated);
+                  }}
+                  className="w-full px-2.5 py-1.5 rounded-lg border border-stone-300 bg-stone-50 text-xs"
                 />
               </div>
               <div>
-                <label className="text-[11px] text-stone-500">Clínica / Empresa</label>
+                <label className="text-[11px] text-stone-500 font-medium">Clínica / Empresa</label>
                 <input
                   type="text"
                   value={localSignee.company}
-                  onChange={(e) =>
-                    setLocalSignee({ ...localSignee, company: e.target.value })
-                  }
-                  className="w-full px-2 py-1 rounded border border-stone-300 bg-stone-50 text-xs"
+                  onChange={(e) => {
+                    const updated = { ...localSignee, company: e.target.value };
+                    setLocalSignee(updated);
+                    onUpdateSignee(updated);
+                  }}
+                  className="w-full px-2.5 py-1.5 rounded-lg border border-stone-300 bg-stone-50 text-xs"
                 />
               </div>
               <div>
-                <label className="text-[11px] text-stone-500">WhatsApp / Teléfono</label>
+                <label className="text-[11px] text-stone-500 font-medium">WhatsApp / Teléfono</label>
                 <input
                   type="text"
                   value={localSignee.whatsapp}
-                  onChange={(e) =>
-                    setLocalSignee({ ...localSignee, whatsapp: e.target.value })
-                  }
-                  className="w-full px-2 py-1 rounded border border-stone-300 bg-stone-50 text-xs"
+                  onChange={(e) => {
+                    const updated = { ...localSignee, whatsapp: e.target.value };
+                    setLocalSignee(updated);
+                    onUpdateSignee(updated);
+                  }}
+                  className="w-full px-2.5 py-1.5 rounded-lg border border-stone-300 bg-stone-50 text-xs"
                 />
               </div>
             </div>
@@ -499,7 +1134,7 @@ export const SignaturePadModal: React.FC<SignaturePadModalProps> = ({
         </div>
 
         {/* Modal Footer */}
-        <div className="flex justify-end gap-2 px-6 py-3 bg-stone-50 border-t border-stone-200">
+        <div className="flex justify-end gap-2 px-6 py-3 bg-stone-50 border-t border-stone-200 shrink-0">
           <button
             type="button"
             onClick={onClose}
@@ -510,7 +1145,7 @@ export const SignaturePadModal: React.FC<SignaturePadModalProps> = ({
           <button
             type="button"
             onClick={handleSaveAndClose}
-            className="px-4 py-2 text-xs font-semibold bg-stone-900 text-white rounded-lg hover:bg-stone-800 transition-colors"
+            className="px-5 py-2 text-xs font-semibold bg-stone-900 text-white rounded-lg hover:bg-stone-800 transition-colors shadow-xs"
           >
             Guardar Cambios
           </button>
