@@ -19,7 +19,7 @@ import {
   CheckCircle2,
 } from 'lucide-react';
 import { SigneeInfo, StampType, SignatureLayoutMode, StampPositionMode } from '../types';
-import { DEFAULT_STAMP_SVG, DEFAULT_SIGNATURE_SVG } from '../data/defaultData';
+import { DEFAULT_SIGNATURE_SVG } from '../data/defaultData';
 
 interface SignaturePadModalProps {
   isOpen: boolean;
@@ -45,10 +45,11 @@ export const SignaturePadModal: React.FC<SignaturePadModalProps> = ({
   const [hasDrawn, setHasDrawn] = useState(false);
 
   useEffect(() => {
+    const isCustom = signee.stampType === 'custom' || (!signee.useGeneratedStamp && !!signee.customStampImage);
     setLocalSignee({
       ...signee,
-      defaultStampImage: signee.defaultStampImage || DEFAULT_STAMP_SVG,
-      stampType: signee.stampType || (signee.useGeneratedStamp ? 'generated' : signee.customStampImage ? 'custom' : 'default'),
+      stampType: isCustom ? 'custom' : 'generated',
+      useGeneratedStamp: !isCustom,
       layoutMode: signee.layoutMode || 'split',
       stampPosition: signee.stampPosition || 'beside-right',
       signatureOffsetX: signee.signatureOffsetX ?? 0,
@@ -155,20 +156,6 @@ export const SignaturePadModal: React.FC<SignaturePadModalProps> = ({
   };
 
   // Stamp selection handlers
-  const handleSelectDefaultStamp = () => {
-    const defaultImg = localSignee.defaultStampImage || DEFAULT_STAMP_SVG;
-    const updated: SigneeInfo = {
-      ...localSignee,
-      stampType: 'default',
-      stampImage: defaultImg,
-      defaultStampImage: defaultImg,
-      showStamp: true,
-      useGeneratedStamp: false,
-    };
-    setLocalSignee(updated);
-    onUpdateSignee(updated);
-  };
-
   const handleSelectCustomStamp = () => {
     if (!localSignee.customStampImage) return;
     const updated: SigneeInfo = {
@@ -206,7 +193,6 @@ export const SignaturePadModal: React.FC<SignaturePadModalProps> = ({
           stampType: 'custom',
           showStamp: true,
           useGeneratedStamp: false,
-          defaultStampImage: localSignee.defaultStampImage || DEFAULT_STAMP_SVG,
         };
         setLocalSignee(updated);
         onUpdateSignee(updated);
@@ -216,13 +202,12 @@ export const SignaturePadModal: React.FC<SignaturePadModalProps> = ({
   };
 
   const handleRemoveCustomStamp = () => {
-    const defaultImg = localSignee.defaultStampImage || DEFAULT_STAMP_SVG;
     const updated: SigneeInfo = {
       ...localSignee,
       customStampImage: undefined,
-      stampType: 'default',
-      stampImage: defaultImg,
-      useGeneratedStamp: false,
+      stampImage: undefined,
+      stampType: 'generated',
+      useGeneratedStamp: true,
     };
     setLocalSignee(updated);
     onUpdateSignee(updated);
@@ -257,13 +242,10 @@ export const SignaturePadModal: React.FC<SignaturePadModalProps> = ({
     onClose();
   };
 
-  const currentStampType: StampType =
-    localSignee.stampType ||
-    (localSignee.useGeneratedStamp
-      ? 'generated'
-      : localSignee.customStampImage && localSignee.stampImage === localSignee.customStampImage
+  const currentStampType: 'custom' | 'generated' =
+    localSignee.stampType === 'custom' || (!localSignee.useGeneratedStamp && !!localSignee.customStampImage)
       ? 'custom'
-      : 'default');
+      : 'generated';
 
   return (
     <div className="fixed inset-0 z-50 bg-stone-900/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4">
@@ -368,64 +350,13 @@ export const SignaturePadModal: React.FC<SignaturePadModalProps> = ({
               <div className="bg-amber-50/70 border border-amber-200 rounded-xl p-3 text-xs text-amber-950 flex items-start gap-2">
                 <Sparkles className="w-4 h-4 text-amber-700 shrink-0 mt-0.5" />
                 <p>
-                  <strong>Selector de Sello:</strong> Puedes elegir entre el sello oficial de la plantilla, tu propia imagen personalizada, o un sello vectorial. Puedes cambiar entre ellos cuando quieras sin perder ninguno.
+                  <strong>Selector de Sello:</strong> Puedes elegir entre subir tu propio sello personalizado (imagen) o generar un sello digital editable con tus datos profesionales.
                 </p>
               </div>
 
               {/* Selector de opciones de sello */}
               <div className="space-y-3">
-                {/* 1. SELLO POR DEFECTO DE LA PLANTILLA */}
-                <div
-                  onClick={handleSelectDefaultStamp}
-                  className={`p-3.5 rounded-xl border-2 transition-all cursor-pointer ${
-                    currentStampType === 'default'
-                      ? 'border-stone-900 bg-stone-50/60 shadow-xs'
-                      : 'border-stone-200 hover:border-stone-300 bg-white'
-                  }`}
-                >
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="flex items-center gap-2">
-                      <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${
-                        currentStampType === 'default'
-                          ? 'border-stone-900 bg-stone-900 text-white'
-                          : 'border-stone-300'
-                      }`}>
-                        {currentStampType === 'default' && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
-                      </div>
-                      <span className="text-xs font-bold text-stone-900">
-                        Sello por Defecto de la Plantilla
-                      </span>
-                      <span className="px-1.5 py-0.5 text-[10px] font-semibold bg-stone-200 text-stone-700 rounded">
-                        Oficial
-                      </span>
-                    </div>
-
-                    {currentStampType === 'default' ? (
-                      <span className="text-[11px] font-bold text-emerald-700 flex items-center gap-1">
-                        <CheckCircle2 className="w-3.5 h-3.5" />
-                        Activo
-                      </span>
-                    ) : (
-                      <span className="text-[11px] font-medium text-stone-500 hover:text-stone-900">
-                        Hacer clic para activar
-                      </span>
-                    )}
-                  </div>
-
-                  <p className="text-[11px] text-stone-600 mb-2.5">
-                    Sello médico oficial de la plantilla Vitapiel (Dra. Laura M. Oliveros Valencia, Cód. 9620).
-                  </p>
-
-                  <div className="bg-white border border-stone-200 rounded-lg p-2.5 flex items-center justify-center h-20 max-w-xs mx-auto">
-                    <img
-                      src={localSignee.defaultStampImage || DEFAULT_STAMP_SVG}
-                      alt="Sello por defecto"
-                      className="max-h-full max-w-full object-contain filter contrast-105"
-                    />
-                  </div>
-                </div>
-
-                {/* 2. MI IMAGEN DE SELLO PERSONALIZADO */}
+                {/* 1. MI IMAGEN DE SELLO PERSONALIZADO */}
                 <div
                   className={`p-3.5 rounded-xl border-2 transition-all ${
                     currentStampType === 'custom'
@@ -525,7 +456,7 @@ export const SignaturePadModal: React.FC<SignaturePadModalProps> = ({
                   )}
                 </div>
 
-                {/* 3. SELLO DIGITAL GENERADO CON DATOS */}
+                {/* 2. SELLO DIGITAL GENERADO CON DATOS */}
                 <div
                   className={`p-3.5 rounded-xl border-2 transition-all ${
                     currentStampType === 'generated'

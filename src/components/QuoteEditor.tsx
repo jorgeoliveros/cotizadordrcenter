@@ -25,7 +25,6 @@ import {
 } from 'lucide-react';
 import { Quote, QuoteItem, QuoteNote } from '../types';
 import { formatCurrency } from '../utils/formatters';
-import { DEFAULT_STAMP_SVG } from '../data/defaultData';
 
 interface QuoteEditorProps {
   quote: Quote;
@@ -876,29 +875,7 @@ export const QuoteEditor: React.FC<QuoteEditorProps> = ({
           <label className="block text-stone-600 font-medium text-xs mb-1.5">
             Selección de Sello Oficial:
           </label>
-          <div className="grid grid-cols-3 gap-2 text-xs">
-            <button
-              type="button"
-              onClick={() =>
-                onChangeQuote({
-                  ...quote,
-                  signee: {
-                    ...quote.signee,
-                    stampType: 'default',
-                    stampImage: quote.signee.defaultStampImage || DEFAULT_STAMP_SVG,
-                    useGeneratedStamp: false,
-                    showStamp: true,
-                  },
-                })
-              }
-              className={`py-2 px-2 rounded-lg border text-xs font-semibold transition-colors ${
-                (quote.signee.stampType || 'default') === 'default' && !quote.signee.useGeneratedStamp
-                  ? 'border-stone-900 bg-stone-900 text-white'
-                  : 'border-stone-200 hover:bg-stone-50 text-stone-700'
-              }`}
-            >
-              Plantilla
-            </button>
+          <div className="grid grid-cols-2 gap-2 text-xs">
             <button
               type="button"
               onClick={() => {
@@ -918,7 +895,7 @@ export const QuoteEditor: React.FC<QuoteEditorProps> = ({
                 }
               }}
               className={`py-2 px-2 rounded-lg border text-xs font-semibold transition-colors ${
-                quote.signee.stampType === 'custom'
+                quote.signee.stampType === 'custom' || (!quote.signee.useGeneratedStamp && quote.signee.customStampImage)
                   ? 'border-stone-900 bg-stone-900 text-white'
                   : 'border-stone-200 hover:bg-stone-50 text-stone-700'
               }`}

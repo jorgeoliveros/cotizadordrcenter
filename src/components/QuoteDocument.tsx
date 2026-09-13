@@ -1,7 +1,6 @@
 import React, { useRef } from 'react';
 import { Quote, SigneeInfo } from '../types';
 import { calculateQuoteTotals, formatCurrency } from '../utils/formatters';
-import { DEFAULT_STAMP_SVG } from '../data/defaultData';
 
 interface QuoteDocumentProps {
   quote: Quote;
@@ -556,17 +555,11 @@ export const QuoteDocument: React.FC<QuoteDocumentProps> = ({
           const stampPos = quote.signee.stampPosition || 'beside-right';
 
           const stampSource =
-            quote.signee.stampType ||
-            (quote.signee.useGeneratedStamp
-              ? 'generated'
-              : quote.signee.customStampImage && quote.signee.stampImage === quote.signee.customStampImage
+            quote.signee.stampType === 'custom' || (!quote.signee.useGeneratedStamp && !!quote.signee.customStampImage)
               ? 'custom'
-              : 'default');
+              : 'generated';
 
-          const activeStampImg =
-            stampSource === 'custom'
-              ? quote.signee.customStampImage || quote.signee.stampImage || DEFAULT_STAMP_SVG
-              : quote.signee.defaultStampImage || quote.signee.stampImage || DEFAULT_STAMP_SVG;
+          const activeStampImg = quote.signee.customStampImage || quote.signee.stampImage;
 
           const sigX = quote.signee.signatureOffsetX ?? 0;
           const sigY = quote.signee.signatureOffsetY ?? 0;
@@ -665,7 +658,7 @@ export const QuoteDocument: React.FC<QuoteDocumentProps> = ({
                   }`}
                   title={!isPrinting && onChangeSignee ? 'Arrastrar para mover el sello' : undefined}
                 >
-                  {stampSource !== 'generated' ? (
+                  {stampSource === 'custom' && activeStampImg ? (
                     <div className="relative">
                       <img
                         src={activeStampImg}
