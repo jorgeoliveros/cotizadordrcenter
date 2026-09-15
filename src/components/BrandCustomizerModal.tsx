@@ -118,7 +118,7 @@ export const BrandCustomizerModal: React.FC<BrandCustomizerModalProps> = ({
               <button
                 type="button"
                 onClick={() => {
-                  const updated = { ...localBrand, logoUrl: DEFAULT_LOGO_SVG };
+                  const updated = { ...localBrand, logoUrl: '/logo-drcenter.png' };
                   setLocalBrand(updated);
                   onUpdateBrand(updated);
                 }}

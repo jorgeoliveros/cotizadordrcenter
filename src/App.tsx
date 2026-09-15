@@ -21,7 +21,7 @@ import {
   UserCheck,
 } from 'lucide-react';
 
-const STORAGE_KEY_QUOTE = 'cotizador_active_quote_v2';
+const STORAGE_KEY_QUOTE = 'cotizador_active_quote_v3';
 const STORAGE_KEY_CLIENTS = 'cotizador_frequent_clients';
 
 export default function App() {
@@ -31,18 +31,27 @@ export default function App() {
       const saved = localStorage.getItem(STORAGE_KEY_QUOTE);
       if (saved) {
         const parsed = JSON.parse(saved);
-        // If saved quote was from older template or missing emisor name, use INITIAL_QUOTE
         if (parsed?.company?.name?.includes('Oliveros') || !parsed?.company?.name) {
           return INITIAL_QUOTE;
         }
         return parsed;
       }
-      // Check legacy storage key; if it's from old template, default to INITIAL_QUOTE
-      const legacySaved = localStorage.getItem('cotizador_active_quote');
-      if (legacySaved) {
-        const parsedLegacy = JSON.parse(legacySaved);
-        if (parsedLegacy?.company?.name && !parsedLegacy.company.name.includes('Oliveros')) {
-          return parsedLegacy;
+      // Check legacy v2 storage key
+      const legacySavedV2 = localStorage.getItem('cotizador_active_quote_v2');
+      if (legacySavedV2) {
+        const parsedV2 = JSON.parse(legacySavedV2);
+        if (parsedV2?.company?.name && !parsedV2.company.name.includes('Oliveros')) {
+          // If legacy v2 was using inline SVG or missing logoUrl, update brand logo to default
+          if (!parsedV2.brand?.logoUrl || parsedV2.brand.logoUrl.startsWith('data:image/svg+xml')) {
+            return {
+              ...parsedV2,
+              brand: {
+                ...parsedV2.brand,
+                logoUrl: INITIAL_QUOTE.brand.logoUrl,
+              },
+            };
+          }
+          return parsedV2;
         }
       }
     } catch (e) {

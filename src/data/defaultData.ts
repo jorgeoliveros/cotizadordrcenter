@@ -183,7 +183,7 @@ export const INITIAL_QUOTE: Quote = {
     placement: 'prefix'
   },
   brand: {
-    logoUrl: DEFAULT_LOGO_SVG,
+    logoUrl: '/logo-drcenter.png',
     logoWidth: 200,
     logoAlignment: 'right',
     fontHeading: 'Cormorant Garamond',
