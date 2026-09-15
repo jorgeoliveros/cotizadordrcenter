@@ -66,7 +66,7 @@ export const Header: React.FC<HeaderProps> = ({
             type="button"
             onClick={onResetToTemplate}
             className="text-stone-400 hover:text-stone-700 p-1.5 md:hidden"
-            title="Cargar plantilla Vitapiel"
+            title="Cargar plantilla oficial"
           >
             <RotateCcw className="w-4 h-4" />
           </button>

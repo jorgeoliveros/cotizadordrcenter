@@ -720,7 +720,7 @@ export const QuoteEditor: React.FC<QuoteEditorProps> = ({
               value={quote.company.name}
               onChange={(e) => handleCompanyChange('name', e.target.value)}
               className="w-full px-3 py-1.5 rounded-lg border border-stone-300 bg-stone-50/40 focus:bg-white text-xs font-semibold"
-              placeholder="Dra. Laura M. Oliveros Valencia"
+              placeholder="Dr. Franklin Escobar Zarate"
             />
           </div>
 
@@ -733,7 +733,7 @@ export const QuoteEditor: React.FC<QuoteEditorProps> = ({
               value={quote.company.specialty}
               onChange={(e) => handleCompanyChange('specialty', e.target.value)}
               className="w-full px-3 py-1.5 rounded-lg border border-stone-300 bg-stone-50/40 focus:bg-white text-xs"
-              placeholder="Dermatología Clínica y Estética"
+              placeholder="Ginecólogo y Obstetra"
             />
           </div>
 
@@ -746,7 +746,7 @@ export const QuoteEditor: React.FC<QuoteEditorProps> = ({
               value={quote.company.taxId}
               onChange={(e) => handleCompanyChange('taxId', e.target.value)}
               className="w-full px-3 py-1.5 rounded-lg border border-stone-300 bg-stone-50/40 focus:bg-white text-xs"
-              placeholder="Cedula 801100379"
+              placeholder="Cedula 3-102-913099"
             />
           </div>
 
@@ -760,7 +760,7 @@ export const QuoteEditor: React.FC<QuoteEditorProps> = ({
               value={quote.company.phone || ''}
               onChange={(e) => handleCompanyChange('phone', e.target.value)}
               className="w-full px-3 py-1.5 rounded-lg border border-stone-300 bg-stone-50/40 focus:bg-white text-xs font-medium"
-              placeholder="+(506) 7261-4743"
+              placeholder="+(506) 8796-2540"
             />
           </div>
 
@@ -774,7 +774,7 @@ export const QuoteEditor: React.FC<QuoteEditorProps> = ({
               value={quote.company.email || ''}
               onChange={(e) => handleCompanyChange('email', e.target.value)}
               className="w-full px-3 py-1.5 rounded-lg border border-stone-300 bg-stone-50/40 focus:bg-white text-xs"
-              placeholder="info@vitapielcr.com"
+              placeholder="info@drcentercr.com"
             />
           </div>
 
@@ -788,7 +788,7 @@ export const QuoteEditor: React.FC<QuoteEditorProps> = ({
               value={quote.company.addressLine1 || ''}
               onChange={(e) => handleCompanyChange('addressLine1', e.target.value)}
               className="w-full px-3 py-1.5 rounded-lg border border-stone-300 bg-stone-50/40 focus:bg-white text-xs"
-              placeholder="Calle 12 Av 16 Heredia."
+              placeholder="Oficentro Valar, Piso 3"
             />
           </div>
 
@@ -807,7 +807,7 @@ export const QuoteEditor: React.FC<QuoteEditorProps> = ({
               value={quote.company.addressLine2 || ''}
               onChange={(e) => handleCompanyChange('addressLine2', e.target.value)}
               className="w-full px-3 py-1.5 rounded-lg border border-stone-300 bg-stone-50/40 focus:bg-white text-xs"
-              placeholder="Oficentro Valar, Segundo Piso"
+              placeholder="Frente al Hospital San Vicente de Paul"
             />
           </div>
         </div>

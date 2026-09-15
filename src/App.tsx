@@ -21,7 +21,7 @@ import {
   UserCheck,
 } from 'lucide-react';
 
-const STORAGE_KEY_QUOTE = 'cotizador_active_quote';
+const STORAGE_KEY_QUOTE = 'cotizador_active_quote_v2';
 const STORAGE_KEY_CLIENTS = 'cotizador_frequent_clients';
 
 export default function App() {
@@ -29,7 +29,22 @@ export default function App() {
   const [quote, setQuote] = useState<Quote>(() => {
     try {
       const saved = localStorage.getItem(STORAGE_KEY_QUOTE);
-      if (saved) return JSON.parse(saved);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        // If saved quote was from older template or missing emisor name, use INITIAL_QUOTE
+        if (parsed?.company?.name?.includes('Oliveros') || !parsed?.company?.name) {
+          return INITIAL_QUOTE;
+        }
+        return parsed;
+      }
+      // Check legacy storage key; if it's from old template, default to INITIAL_QUOTE
+      const legacySaved = localStorage.getItem('cotizador_active_quote');
+      if (legacySaved) {
+        const parsedLegacy = JSON.parse(legacySaved);
+        if (parsedLegacy?.company?.name && !parsedLegacy.company.name.includes('Oliveros')) {
+          return parsedLegacy;
+        }
+      }
     } catch (e) {
       console.error('Error loading saved quote:', e);
     }
@@ -131,11 +146,11 @@ export default function App() {
   const handleResetToTemplate = () => {
     if (
       confirm(
-        '¿Desea restablecer los datos de la cotización al ejemplo oficial de Vitapiel del PDF?'
+        '¿Desea restablecer los datos de la cotización a la plantilla oficial de Dr. Franklin Escobar Zarate?'
       )
     ) {
       setQuote(INITIAL_QUOTE);
-      showToast('Plantilla Vitapiel restaurada.');
+      showToast('Plantilla oficial restablecida.');
     }
   };
 
@@ -236,7 +251,7 @@ export default function App() {
               type="button"
               onClick={handleResetToTemplate}
               className="p-2 text-stone-300 hover:text-white rounded-lg hover:bg-white/10 transition-colors text-xs flex items-center gap-1"
-              title="Restablecer ejemplo oficial Vitapiel"
+              title="Restablecer plantilla oficial de cotización"
             >
               <RotateCcw className="w-3.5 h-3.5" />
               <span className="text-[11px]">Plantilla PDF</span>

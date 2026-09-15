@@ -12,7 +12,7 @@ interface BrandCustomizerModalProps {
 
 const COLOR_PRESETS = [
   {
-    name: 'Vitapiel Dorado & Carbón',
+    name: 'Dorado & Carbón Oficial',
     primary: '#1c1917',
     accent: '#92400e',
     headerText: '#0c0a09',
@@ -125,7 +125,7 @@ export const BrandCustomizerModal: React.FC<BrandCustomizerModalProps> = ({
                 className="text-[11px] text-amber-800 hover:text-amber-900 flex items-center gap-1"
               >
                 <RotateCcw className="w-3 h-3" />
-                Restablecer logo Vitapiel
+                Restablecer logo oficial
               </button>
             </div>
 
